@@ -23,7 +23,7 @@ public class YearActivity extends AppCompatActivity {
     private TextView yearTitleTextView;
 
     // Base URL for API
-    private static final String BASE_URL = "http://ec2-16-176-13-247.ap-southeast-2.compute.amazonaws.com/api/subjects/";
+    private static final String BASE_URL = ApiConfig.api("subjects/");
 
     private RequestQueue requestQueue;
 
@@ -105,8 +105,9 @@ public class YearActivity extends AppCompatActivity {
     // Open the CourseActivity with the selected course's ID and name
     private void openCourseActivity(int courseId, String courseName) {
         Intent intent = new Intent(this, CourseActivity.class);
-        intent.putExtra("course_id", courseId); // Pass course_id
-        intent.putExtra("course_name", courseName); // Pass course_name
+        intent.putExtra("course_id", courseId);
+        intent.putExtra("course_name", courseName);
+        intent.putExtra("year_id", getIntent().getIntExtra("year_id", 0));
         startActivity(intent);
     }
 }

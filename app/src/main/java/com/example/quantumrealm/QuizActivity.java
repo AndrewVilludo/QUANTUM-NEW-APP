@@ -67,7 +67,7 @@ public class QuizActivity extends AppCompatActivity {
 
     private void fetchQuizData(int lessonId) {
         // Correct the URL format
-        String url = "http://ec2-16-176-13-247.ap-southeast-2.compute.amazonaws.com/lesson/" + lessonId + "/quizzes";
+        String url = ApiConfig.api("lesson-quizzes/" + lessonId);
 
         JsonObjectRequest request = new JsonObjectRequest(Request.Method.GET, url, null,
                 response -> {

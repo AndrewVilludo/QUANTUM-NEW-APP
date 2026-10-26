@@ -24,12 +24,9 @@ public class ModuleActivity extends AppCompatActivity {
     private LinearLayout moduleContainer;
     private TextView moduleTitleTextView;
 
-    private int courseId;
-    private String courseName;
-    private int yearId;
+    private int moduleId;
+    private String moduleName;
     private RequestQueue requestQueue;
-
-    private static final String BASE_URL = "http://ec2-16-176-13-247.ap-southeast-2.compute.amazonaws.com/api/module-lessons/";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,78 +38,70 @@ public class ModuleActivity extends AppCompatActivity {
 
         requestQueue = Volley.newRequestQueue(this);
 
-        courseId = getIntent().getIntExtra("course_id", -1);
-        courseName = getIntent().getStringExtra("course_name");
-        yearId = getIntent().getIntExtra("year_id", -1);
+        moduleId = getIntent().getIntExtra("course_id", -1);
+        moduleName = getIntent().getStringExtra("course_name");
 
-        Log.d("ModuleActivity", "courseId: " + courseId + ", yearId: " + yearId);
+        Log.d("ModuleActivity", "moduleId: " + moduleId);
 
-        if (courseId == -1 || yearId == -1) {
-            Toast.makeText(this, "Invalid course or year ID", Toast.LENGTH_SHORT).show();
+        if (moduleId == -1) {
+            Toast.makeText(this, "Invalid module ID", Toast.LENGTH_SHORT).show();
+            finish();
             return;
         }
 
-        moduleTitleTextView.setText(courseName);
-
-        fetchLessonsFromApi(courseId, yearId);
+        moduleTitleTextView.setText(moduleName);
+        fetchLessonsFromApi(moduleId);
     }
 
-    private void fetchLessonsFromApi(int courseId, int yearId) {
-        String url = BASE_URL + courseId + "?year_id=" + yearId;
+    private void fetchLessonsFromApi(int moduleId) {
+        String url = ApiConfig.api("module-lessons/" + moduleId);
 
         JsonObjectRequest request = new JsonObjectRequest(
                 Request.Method.GET, url, null,
                 response -> {
                     try {
-                        JSONArray modules = response.getJSONArray("data");
+                        JSONArray lessons = response.getJSONArray("data");
 
-                        if (modules.length() == 0) {
-                            Toast.makeText(this, "No lessons found for the given course and year.", Toast.LENGTH_SHORT).show();
-                        } else {
-                            for (int i = 0; i < modules.length(); i++) {
-                                JSONObject module = modules.getJSONObject(i);
+                        if (lessons.length() == 0) {
+                            Toast.makeText(this, "No lessons found for this module.", Toast.LENGTH_SHORT).show();
+                            return;
+                        }
 
-                                String moduleName = module.getString("name");
-                                int moduleId = module.getInt("id");
+                        for (int i = 0; i < lessons.length(); i++) {
+                            JSONObject lesson = lessons.getJSONObject(i);
 
-                                // Display module name
-                                TextView moduleNameView = new TextView(this);
-                                moduleNameView.setText("Module: " + moduleName);
-                                moduleNameView.setTextSize(18);
-                                moduleNameView.setTextColor(Color.BLACK);
-                                moduleContainer.addView(moduleNameView);
+                            String lessonName = lesson.getString("name");
+                            int lessonId = lesson.getInt("id");
 
-                                // Extract and display content
-                                JSONArray contentArray = module.getJSONArray("data");
-                                for (int j = 0; j < contentArray.length(); j++) {
-                                    String content = contentArray.getJSONObject(j).getString("content");
+                            TextView lessonNameView = new TextView(this);
+                            lessonNameView.setText(lessonName);
+                            lessonNameView.setTextSize(18);
+                            lessonNameView.setTextColor(Color.BLACK);
+                            lessonNameView.setPadding(16, 24, 16, 8);
+                            moduleContainer.addView(lessonNameView);
 
-                                    TextView contentTextView = new TextView(this);
-                                    contentTextView.setText(content);
-                                    contentTextView.setPadding(16, 8, 16, 8);
-                                    moduleContainer.addView(contentTextView);
-                                }
+                            Button noviceButton = new Button(this);
+                            noviceButton.setText("Novice");
+                            noviceButton.setBackgroundColor(Color.parseColor("#4CAF50"));
+                            noviceButton.setTextColor(Color.WHITE);
+                            noviceButton.setOnClickListener(v ->
+                                    openLessonActivity(moduleId, lessonName));
+                            moduleContainer.addView(noviceButton);
 
-                                // Add Novice and Expert buttons
-                                Button noviceButton = new Button(this);
-                                noviceButton.setText("Novice");
-                                noviceButton.setBackgroundColor(Color.parseColor("#4CAF50"));
-                                noviceButton.setTextColor(Color.WHITE);
-
-
-                                moduleContainer.addView(noviceButton);
-
-                                // Handle button clicks
-                                noviceButton.setOnClickListener(v -> openLessonActivity(moduleId, moduleName, "Novice"));
-                            }
+                            Button quizButton = new Button(this);
+                            quizButton.setText("Quiz");
+                            quizButton.setBackgroundColor(Color.parseColor("#2196F3"));
+                            quizButton.setTextColor(Color.WHITE);
+                            quizButton.setOnClickListener(v -> openQuizActivity(lessonId));
+                            moduleContainer.addView(quizButton);
                         }
                     } catch (Exception e) {
-                        Toast.makeText(this, "Error parsing modules: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                        Toast.makeText(this, "Error parsing lessons: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                         e.printStackTrace();
                     }
                 },
                 error -> {
-                    Toast.makeText(this, "Failed to fetch modules: " + error.toString(), Toast.LENGTH_LONG).show();
+                    Toast.makeText(this, "Failed to fetch lessons: " + error.toString(), Toast.LENGTH_LONG).show();
                     error.printStackTrace();
                 }
         );
@@ -120,11 +109,16 @@ public class ModuleActivity extends AppCompatActivity {
         requestQueue.add(request);
     }
 
-    private void openLessonActivity(int moduleId, String moduleName, String userLevel) {
+    private void openLessonActivity(int moduleId, String moduleName) {
         Intent intent = new Intent(this, LessonActivity.class);
         intent.putExtra("module_id", moduleId);
         intent.putExtra("module_name", moduleName);
-        intent.putExtra("user_level", userLevel);
+        startActivity(intent);
+    }
+
+    private void openQuizActivity(int lessonId) {
+        Intent intent = new Intent(this, QuizActivity.class);
+        intent.putExtra("lesson_id", lessonId);
         startActivity(intent);
     }
 }

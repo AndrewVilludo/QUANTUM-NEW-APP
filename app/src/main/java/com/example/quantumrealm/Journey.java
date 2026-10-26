@@ -25,7 +25,7 @@ import org.json.JSONObject;
 public class Journey extends AppCompatActivity {
 
     private LinearLayout buttonContainer;
-    private static final String API_URL = "http://ec2-16-176-13-247.ap-southeast-2.compute.amazonaws.com/api/years";
+    private static final String API_URL = ApiConfig.api("years");
     private RequestQueue requestQueue;
 
     @Override

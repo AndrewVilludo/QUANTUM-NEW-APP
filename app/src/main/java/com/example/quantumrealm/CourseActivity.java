@@ -11,7 +11,6 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
-import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
 
 import org.json.JSONArray;
@@ -22,7 +21,7 @@ public class CourseActivity extends AppCompatActivity {
     private LinearLayout moduleContainer;
     private TextView courseTitleTextView;
 
-    private static final String BASE_URL = "http://ec2-16-176-13-247.ap-southeast-2.compute.amazonaws.com/api/subject-modules/";
+    private static final String BASE_URL = ApiConfig.api("subject-modules/");
 
     private RequestQueue requestQueue;
 
@@ -49,7 +48,8 @@ public class CourseActivity extends AppCompatActivity {
     private void fetchModulesFromApi(int courseId) {
         String url = BASE_URL + courseId;
 
-        JsonObjectRequest request = new JsonObjectRequest(
+        AuthenticatedJsonObjectRequest request = new AuthenticatedJsonObjectRequest(
+                this,
                 Request.Method.GET, url, null,
                 response -> {
                     try {
@@ -90,7 +90,8 @@ public class CourseActivity extends AppCompatActivity {
         Intent intent = new Intent(this, ModuleActivity.class);
         intent.putExtra("course_id", moduleId);  // Ensure this is the correct course ID
         intent.putExtra("course_name", moduleName);  // Ensure this is the correct course name
-        intent.putExtra("year_id", yearId);  // Ensure you're passing the correct year ID
+        intent.putExtra("year_id", yearId);
+        intent.putExtra("subject_id", getIntent().getIntExtra("course_id", 0));
         startActivity(intent);
     }
 

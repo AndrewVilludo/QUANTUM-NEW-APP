@@ -48,7 +48,7 @@ public class LessonActivity extends AppCompatActivity {
     }
 
     private void fetchLessonData(int moduleId) {
-        String url = "http://ec2-16-176-13-247.ap-southeast-2.compute.amazonaws.com/api/module-lessons/" + moduleId;
+        String url = ApiConfig.api("module-lessons/" + moduleId);
 
         JsonObjectRequest request = new JsonObjectRequest(Request.Method.GET, url, null,
                 response -> {

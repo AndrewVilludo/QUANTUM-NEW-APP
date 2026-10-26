@@ -31,7 +31,7 @@ public class Register extends AppCompatActivity {
     private CheckBox checkBoxShowPassword;
     private AutoCompleteTextView yearLevelAutoCompleteTextView;
 
-    private static final String REGISTER_URL = "http://ec2-16-176-13-247.ap-southeast-2.compute.amazonaws.com/api/register";
+    private static final String REGISTER_URL = ApiConfig.api("register");
 
     private RequestQueue requestQueue;
 

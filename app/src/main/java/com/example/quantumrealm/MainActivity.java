@@ -31,7 +31,7 @@ public class MainActivity extends AppCompatActivity {
     private CheckBox showLoginPassword;
     private TextView forgotPasswordTextView;
     private RequestQueue requestQueue;
-    private static final String LOGIN_URL = "http://ec2-16-176-13-247.ap-southeast-2.compute.amazonaws.com/api/login";
+    private static final String LOGIN_URL = ApiConfig.api("login");
 
     private static final String PREFS_NAME = "APP_PREFS";
     private static final String TOKEN_KEY = "auth_token";

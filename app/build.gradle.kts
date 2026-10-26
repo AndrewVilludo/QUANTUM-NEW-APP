@@ -1,10 +1,24 @@
+import java.io.File
+
 plugins {
     id("com.android.application")
 }
 
+// Keep build output out of OneDrive to avoid AccessDenied during Gradle tasks.
+layout.buildDirectory.set(
+    File(System.getenv("LOCALAPPDATA") ?: System.getProperty("user.home"), "QuantumRealm-build")
+)
+
+val apiBaseUrl: String =
+    (project.findProperty("API_BASE_URL") as String?) ?: "http://10.0.2.2:8000"
+
 android {
     namespace = "com.example.quantumrealm"
     compileSdk = 34
+
+    buildFeatures {
+        buildConfig = true
+    }
 
     defaultConfig {
         applicationId = "com.example.quantumrealm"
@@ -14,6 +28,7 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        buildConfigField("String", "API_BASE_URL", "\"$apiBaseUrl\"")
     }
 
     buildTypes {
