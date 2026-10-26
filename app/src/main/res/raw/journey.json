@@ -1,0 +1,40 @@
+{
+  "intro": {
+    "message": "Are you ready to begin your study journey with me?",
+    "options": [
+      {
+        "text": "quit the game",
+        "action": "quit"
+      },
+      {
+        "text": "Yes, let's go!",
+        "action": "next"
+      }
+    ]
+  },
+  "rules": [
+    {
+      "message": "Awesome! Before we get started, let me explain the rules.",
+      "action": "next"
+    },
+    {
+      "message": "Each level must be completed and passed before moving on to the next.",
+      "action": "next"
+    },
+    {
+      "message": "If you fail a level, you'll need to retry it until you pass.",
+      "action": "next"
+    },
+    {
+      "message": "Locked levels will remain inaccessible until you’ve cleared the previous ones.",
+      "action": "next"
+    },
+    {
+      "message": "Now that you know the rules, I assume you're ready...",
+      "action": "next"
+    }
+  ],
+  "start_game": {
+    "action": "start the Game!"
+  }
+}

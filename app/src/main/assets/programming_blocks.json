@@ -1,0 +1,318 @@
+{
+  "languages": [
+    {
+      "name": "Java",
+      "questions": [
+        {
+          "question": "Print numbers from 1 to 10",
+          "blocks": [
+            {
+              "id": 1,
+              "text": "for (int i = 1; i <= 10; i++)"
+            },
+            {
+              "id": 2,
+              "text": "{"
+            },
+            {
+              "id": 3,
+              "text": "System.out.println(i);"
+            },
+            {
+              "id": 4,
+              "text": "}"
+            },
+            {
+              "id": 5,
+              "text": "// end loop"
+            }
+          ],
+          "solution_order": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "expected_output": "1\n2\n3\n4\n5\n6\n7\n8\n9\n10"
+        },
+        {
+          "question": "Print Hello World",
+          "blocks": [
+            {
+              "id": 1,
+              "text": "System.out.println(\"Hello World\");"
+            },
+            {
+              "id": 2,
+              "text": "int x = 10;"
+            },
+            {
+              "id": 3,
+              "text": "// This is a comment"
+            },
+            {
+              "id": 4,
+              "text": "String name = \"Mark\";"
+            },
+            {
+              "id": 5,
+              "text": "// Print something"
+            }
+          ],
+          "solution_order": [
+            1
+          ],
+          "expected_output": "Hello World"
+        },
+        {
+          "question": "Add two numbers",
+          "blocks": [
+            {
+              "id": 1,
+              "text": "int a = 5, b = 10;"
+            },
+            {
+              "id": 2,
+              "text": "int sum = a + b;"
+            },
+            {
+              "id": 3,
+              "text": "System.out.println(sum);"
+            },
+            {
+              "id": 4,
+              "text": "// end addition"
+            },
+            {
+              "id": 5,
+              "text": "int x = 20;"
+            }
+          ],
+          "solution_order": [
+            1,
+            2,
+            3
+          ],
+          "expected_output": "15"
+        },
+        {
+          "question": "Print even numbers from 2 to 10",
+          "blocks": [
+            {
+              "id": 1,
+              "text": "for (int i = 2; i <= 10; i += 2)"
+            },
+            {
+              "id": 2,
+              "text": "{"
+            },
+            {
+              "id": 3,
+              "text": "System.out.println(i);"
+            },
+            {
+              "id": 4,
+              "text": "}"
+            },
+            {
+              "id": 5,
+              "text": "// end even loop"
+            }
+          ],
+          "solution_order": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "expected_output": "2\n4\n6\n8\n10"
+        },
+        {
+          "question": "Print greeting with name",
+          "blocks": [
+            {
+              "id": 1,
+              "text": "String name = \"Mark\";"
+            },
+            {
+              "id": 2,
+              "text": "System.out.println(\"Hello, \" + name);"
+            },
+            {
+              "id": 3,
+              "text": "// Print greeting"
+            },
+            {
+              "id": 4,
+              "text": "int age = 20;"
+            },
+            {
+              "id": 5,
+              "text": "// age declaration"
+            }
+          ],
+          "solution_order": [
+            1,
+            2
+          ],
+          "expected_output": "Hello, Mark"
+        }
+      ]
+    },
+    {
+      "name": "Python",
+      "questions": [
+        {
+          "question": "Print numbers from 1 to 10",
+          "blocks": [
+            {
+              "id": 1,
+              "text": "for i in range(1, 11):"
+            },
+            {
+              "id": 2,
+              "text": "    print(i)"
+            },
+            {
+              "id": 3,
+              "text": "# loop ends"
+            },
+            {
+              "id": 4,
+              "text": "i = 1"
+            },
+            {
+              "id": 5,
+              "text": "# initialize"
+            }
+          ],
+          "solution_order": [
+            1,
+            2
+          ],
+          "expected_output": "1\n2\n3\n4\n5\n6\n7\n8\n9\n10"
+        },
+        {
+          "question": "Print Hello World",
+          "blocks": [
+            {
+              "id": 1,
+              "text": "print(\"Hello World\")"
+            },
+            {
+              "id": 2,
+              "text": "# greeting"
+            },
+            {
+              "id": 3,
+              "text": "name = 'John'"
+            },
+            {
+              "id": 4,
+              "text": "x = 10"
+            },
+            {
+              "id": 5,
+              "text": "# variable"
+            }
+          ],
+          "solution_order": [
+            1
+          ],
+          "expected_output": "Hello World"
+        },
+        {
+          "question": "Add two numbers",
+          "blocks": [
+            {
+              "id": 1,
+              "text": "a = 5"
+            },
+            {
+              "id": 2,
+              "text": "b = 3"
+            },
+            {
+              "id": 3,
+              "text": "print(a + b)"
+            },
+            {
+              "id": 4,
+              "text": "# addition"
+            },
+            {
+              "id": 5,
+              "text": "result = 0"
+            }
+          ],
+          "solution_order": [
+            1,
+            2,
+            3
+          ],
+          "expected_output": "8"
+        },
+        {
+          "question": "Print even numbers from 2 to 10",
+          "blocks": [
+            {
+              "id": 1,
+              "text": "for i in range(2, 11, 2):"
+            },
+            {
+              "id": 2,
+              "text": "    print(i)"
+            },
+            {
+              "id": 3,
+              "text": "# even loop"
+            },
+            {
+              "id": 4,
+              "text": "i = 2"
+            },
+            {
+              "id": 5,
+              "text": "# initialize"
+            }
+          ],
+          "solution_order": [
+            1,
+            2
+          ],
+          "expected_output": "2\n4\n6\n8\n10"
+        },
+        {
+          "question": "Print greeting with name",
+          "blocks": [
+            {
+              "id": 1,
+              "text": "name = \"John\""
+            },
+            {
+              "id": 2,
+              "text": "print(\"Hello, \" + name)"
+            },
+            {
+              "id": 3,
+              "text": "# say hi"
+            },
+            {
+              "id": 4,
+              "text": "age = 25"
+            },
+            {
+              "id": 5,
+              "text": "# age comment"
+            }
+          ],
+          "solution_order": [
+            1,
+            2
+          ],
+          "expected_output": "Hello, John"
+        }
+      ]
+    }
+  ]
+}

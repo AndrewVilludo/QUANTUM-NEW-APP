@@ -1,0 +1,24 @@
+{
+  "data": [
+    {
+      "id": 1,
+      "name": "First Year",
+      "description": "Introduction to programming fundamentals."
+    },
+    {
+      "id": 2,
+      "name": "Second Year",
+      "description": "Intermediate programming concepts and database management."
+    },
+    {
+      "id": 3,
+      "name": "Third Year",
+      "description": "Advanced software engineering and system design."
+    },
+    {
+      "id": 4,
+      "name": "Fourth Year",
+      "description": "Capstone project and real-world application development."
+    }
+  ]
+}

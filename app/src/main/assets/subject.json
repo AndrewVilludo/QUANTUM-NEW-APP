@@ -1,0 +1,39 @@
+{
+  "data": [
+    {
+      "id": 1,
+      "name": "Computer Programming 1",
+      "year_id": 1
+    },
+    {
+      "id": 1,
+      "name": "Computer Programming 2",
+      "year_id": 1
+    },
+    {
+      "id": 2,
+      "name": "Database Management",
+      "year_id": 2
+    },
+    {
+      "id": 2,
+      "name": "Web System and Technologies",
+      "year_id": 2
+    },
+    {
+      "id": 3,
+      "name": "Software Engineering 1",
+      "year_id": 3
+    },
+    {
+      "id": 3,
+      "name": "Software Engineering 2",
+      "year_id": 3
+    },
+    {
+      "id": 4,
+      "name": "Social Technology",
+      "year_id": 4
+    }
+  ]
+}

@@ -1,0 +1,102 @@
+{
+  "data": [
+    {
+      "id": 1,
+      "module_id": 1,
+      "year_id": 1,
+      "name": "Introduction to Programming",
+      "data": [
+        { "content": "Programming is the process of creating a set of instructions for a computer to execute." },
+          { "content": "High-level programming languages like Python, Java, and C++ make programming easier." }
+      ],
+      "activity": [
+        { "id": 1, "question": "What is the primary purpose of programming?", "right_answer": "To give instructions to a computer", "difficulty": "novice" },
+        { "id": 2, "question": "Which programming paradigm does Python support?", "right_answer": "Object-Oriented Programming", "difficulty": "expert" }
+      ]
+    },
+    {
+      "id": 2,
+      "module_id": 1,
+      "year_id": 1,
+      "name": "History of Programming Languages",
+      "data": [
+        { "content": "The first programming language was Assembly, which directly interacted with hardware." },
+        { "content": "Modern languages like Python were designed for readability and ease of use." }
+      ],
+      "activity": [
+        { "id": 3, "question": "Which programming language is known for readability?", "right_answer": "Python", "difficulty": "novice" },
+        { "id": 4, "question": "Who developed the C programming language?", "right_answer": "Dennis Ritchie", "difficulty": "expert" }
+      ]
+    },
+    {
+      "id": 3,
+      "module_id": 2,
+      "year_id": 2,
+      "name": "Understanding Variables",
+      "data": [
+        { "content": "A variable is a storage location in memory with a name and a value." },
+        { "content": "Different data types include integers, strings, and floats." }
+      ],
+      "activity": [
+        { "id": 5, "question": "What is a variable?", "right_answer": "A storage location in memory", "difficulty": "novice" },
+        { "id": 6, "question": "How does memory allocation affect variable performance?", "right_answer": "It determines how efficiently data is stored", "difficulty": "expert" }
+      ]
+    },
+    {
+      "id": 4,
+      "module_id": 2,
+      "year_id": 2,
+      "name": "Data Types in Programming",
+      "data": [
+        { "content": "Common data types include integer, float, string, and boolean." },
+        { "content": "Each programming language has its own set of data types." }
+      ],
+      "activity": [
+        { "id": 7, "question": "Which data type is used for text?", "right_answer": "String", "difficulty": "novice" },
+        { "id": 8, "question": "What is the difference between float and double?", "right_answer": "Double has higher precision than float", "difficulty": "expert" }
+      ]
+    },
+    {
+      "id": 5,
+      "module_id": 3,
+      "year_id": 3,
+      "name": "Introduction to Object-Oriented Programming",
+      "data": [
+        { "content": "OOP is a programming paradigm based on the concept of objects and classes." },
+        { "content": "Key concepts of OOP include inheritance, polymorphism, and encapsulation." }
+      ],
+      "activity": [
+        { "id": 9, "question": "Which of these is a core concept of OOP?", "right_answer": "Encapsulation", "difficulty": "novice" },
+        { "id": 10, "question": "How does polymorphism improve code maintainability?", "right_answer": "By allowing methods to take different forms", "difficulty": "expert" }
+      ]
+    },
+    {
+      "id": 6,
+      "module_id": 3,
+      "year_id": 3,
+      "name": "Introduction to SQL",
+      "data": [
+        { "content": "SQL stands for Structured Query Language and is used to manage databases." },
+        { "content": "SQL commands include SELECT, INSERT, UPDATE, and DELETE." }
+      ],
+      "activity": [
+        { "id": 11, "question": "What is SQL used for?", "right_answer": "Managing databases", "difficulty": "novice" },
+        { "id": 12, "question": "Explain the difference between INNER JOIN and LEFT JOIN.", "right_answer": "INNER JOIN returns matching records; LEFT JOIN includes all left table records", "difficulty": "expert" }
+      ]
+    },
+    {
+      "id": 7,
+      "module_id": 4,
+      "year_id": 4,
+      "name": "Front-End Technologies",
+      "data": [
+        { "content": "Front-end development involves HTML, CSS, and JavaScript." },
+        { "content": "Frameworks like React and Angular help build dynamic web applications." }
+      ],
+      "activity": [
+        { "id": 13, "question": "Which language is primarily used for styling web pages?", "right_answer": "CSS", "difficulty": "novice" },
+        { "id": 14, "question": "How do virtual DOMs improve performance in front-end frameworks?", "right_answer": "They reduce direct updates to the actual DOM", "difficulty": "expert" }
+      ]
+    }
+  ]
+}
