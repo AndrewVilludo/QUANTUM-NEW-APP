@@ -100,6 +100,10 @@ public class MainActivity extends AppCompatActivity {
                             if (response.has("token")) {
                                 String token = response.getString("token");
                                 AuthHelper.saveToken(MainActivity.this, token);
+                                if (response.has("user")) {
+                                    JSONObject user = response.getJSONObject("user");
+                                    AuthHelper.saveUserName(MainActivity.this, user.optString("name", ""));
+                                }
 
                                 runOnUiThread(() -> {
                                     Toast.makeText(MainActivity.this, "Login successful", Toast.LENGTH_SHORT).show();

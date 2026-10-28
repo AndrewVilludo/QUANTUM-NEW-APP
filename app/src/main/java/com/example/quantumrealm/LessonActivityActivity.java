@@ -6,15 +6,12 @@ import android.text.TextUtils;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.LinearLayout;
-import android.widget.RadioButton;
-import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.core.content.ContextCompat;
 
 import com.android.volley.Request;
-import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.card.MaterialCardView;
@@ -31,7 +28,6 @@ public class LessonActivityActivity extends LogoutAppCompatActivity {
     private int subjectId;
 
     private LinearLayout activityContainer;
-    private View modeChoiceRow;
     private JSONArray moduleLessonsCache;
 
     @Override
@@ -40,10 +36,8 @@ public class LessonActivityActivity extends LogoutAppCompatActivity {
         setContentView(R.layout.activity_lesson_activity);
 
         activityContainer = findViewById(R.id.activityContainer);
-        modeChoiceRow = findViewById(R.id.modeChoiceRow);
         TextView title = findViewById(R.id.activityLessonTitle);
-        MaterialButton novice = findViewById(R.id.modeNoviceButton);
-        MaterialButton quiz = findViewById(R.id.modeQuizButton);
+        TextView subtitle = findViewById(R.id.activityLessonSubtitle);
 
         try {
             lesson = new JSONObject(getIntent().getStringExtra(ModuleFlowHelper.EXTRA_LESSON));
@@ -51,138 +45,65 @@ public class LessonActivityActivity extends LogoutAppCompatActivity {
             moduleId = getIntent().getIntExtra(ModuleFlowHelper.EXTRA_MODULE_ID, -1);
             moduleName = getIntent().getStringExtra(ModuleFlowHelper.EXTRA_MODULE_NAME);
             subjectId = getIntent().getIntExtra(ModuleFlowHelper.EXTRA_SUBJECT_ID, -1);
-            title.setText(lesson.optString("name", "Lesson activity"));
+            title.setText(lesson.optString("name", "Lesson challenge"));
+            subtitle.setText(R.string.lesson_challenge_subtitle);
         } catch (Exception e) {
             Toast.makeText(this, "Invalid lesson", Toast.LENGTH_SHORT).show();
             finish();
             return;
         }
 
+        activityContainer.setVisibility(View.VISIBLE);
+
         JSONArray activity = lesson.optJSONArray("activity");
-        boolean hasNovice = activity != null && activity.length() > 0;
-
-        novice.setOnClickListener(v -> {
-            if (!hasNovice) {
-                Toast.makeText(this, "Novice activity not available for this lesson.", Toast.LENGTH_SHORT).show();
-                return;
-            }
+        if (activity != null && activity.length() > 0) {
             showNoviceQuestion(activity.optJSONObject(0));
-        });
-
-        quiz.setOnClickListener(v -> loadQuizModeQuestion());
-
-        if (!hasNovice) {
-            novice.setEnabled(false);
+        } else {
+            Toast.makeText(this, R.string.lesson_no_activity, Toast.LENGTH_LONG).show();
+            finish();
         }
     }
 
     private void showNoviceQuestion(JSONObject activityItem) {
-        modeChoiceRow.setVisibility(View.GONE);
-        activityContainer.setVisibility(View.VISIBLE);
         activityContainer.removeAllViews();
 
         MaterialCardView card = buildCard();
         LinearLayout inner = (LinearLayout) card.getChildAt(0);
+
+        TextView badge = new TextView(this);
+        badge.setText(R.string.lesson_challenge_badge);
+        badge.setTextColor(ContextCompat.getColor(this, R.color.game_accent));
+        inner.addView(badge);
 
         TextView question = new TextView(this);
         question.setText(activityItem.optString("question", "Question"));
         question.setTextAppearance(R.style.TextAppearance_QuantumRealm_Title);
+        question.setPadding(0, 16, 0, 0);
         inner.addView(question);
 
         EditText input = new EditText(this);
-        input.setHint("Type your answer");
+        input.setHint(R.string.lesson_answer_hint);
         input.setBackgroundResource(R.drawable.input_field_game);
         input.setPadding(48, 36, 48, 36);
+        LinearLayout.LayoutParams inputParams = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+        );
+        inputParams.topMargin = 20;
+        input.setLayoutParams(inputParams);
         inner.addView(input);
 
-        MaterialButton submit = primaryButton("Submit answer");
+        MaterialButton submit = primaryButton(getString(R.string.lesson_submit_answer));
         submit.setOnClickListener(v -> submitNovice(input.getText().toString().trim()));
         inner.addView(submit);
 
         activityContainer.addView(card);
-    }
-
-    private void loadQuizModeQuestion() {
-        int lessonId = lesson.optInt("id", -1);
-        if (lessonId == -1) {
-            return;
-        }
-
-        JsonObjectRequest request = new JsonObjectRequest(
-                Request.Method.GET,
-                ApiConfig.api("lesson-quizzes/" + lessonId),
-                null,
-                response -> {
-                    try {
-                        JSONArray data = response.getJSONArray("data");
-                        if (data.length() == 0) {
-                            Toast.makeText(this, "Quiz mode not available for this lesson.", Toast.LENGTH_SHORT).show();
-                            return;
-                        }
-                        showQuizQuestion(data.getJSONObject(0));
-                    } catch (Exception e) {
-                        Toast.makeText(this, "Could not load quiz question", Toast.LENGTH_SHORT).show();
-                    }
-                },
-                error -> Toast.makeText(this, "Failed to load quiz question", Toast.LENGTH_SHORT).show()
-        );
-        Volley.newRequestQueue(this).add(request);
-    }
-
-    private void showQuizQuestion(JSONObject quiz) {
-        modeChoiceRow.setVisibility(View.GONE);
-        activityContainer.setVisibility(View.VISIBLE);
-        activityContainer.removeAllViews();
-
-        MaterialCardView card = buildCard();
-        LinearLayout inner = (LinearLayout) card.getChildAt(0);
-
-        TextView question = new TextView(this);
-        question.setText(quiz.optString("question", "Question"));
-        question.setTextAppearance(R.style.TextAppearance_QuantumRealm_Title);
-        inner.addView(question);
-
-        RadioGroup group = new RadioGroup(this);
-        group.setOrientation(LinearLayout.VERTICAL);
-        addQuizOption(group, quiz.optString("answer1"));
-        addQuizOption(group, quiz.optString("answer2"));
-        addQuizOption(group, quiz.optString("answer3"));
-        addQuizOption(group, quiz.optString("answer4"));
-        inner.addView(group);
-
-        MaterialButton submit = primaryButton("Submit answer");
-        submit.setOnClickListener(v -> {
-            int checked = group.getCheckedRadioButtonId();
-            if (checked == -1) {
-                Toast.makeText(this, "Pick an answer", Toast.LENGTH_SHORT).show();
-                return;
-            }
-            RadioButton selected = findViewById(checked);
-            submitQuizMode(quiz.optInt("id"), selected.getText().toString());
-        });
-        inner.addView(submit);
-
-        activityContainer.addView(card);
-    }
-
-    private void addQuizOption(RadioGroup group, String text) {
-        RadioButton button = new RadioButton(this);
-        button.setText(text);
-        button.setTextColor(ContextCompat.getColor(this, R.color.game_text_primary));
-        button.setBackgroundResource(R.drawable.quiz_option_background);
-        button.setPadding(24, 24, 24, 24);
-        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-        );
-        params.bottomMargin = 12;
-        button.setLayoutParams(params);
-        group.addView(button);
+        input.requestFocus();
     }
 
     private void submitNovice(String answer) {
         if (TextUtils.isEmpty(answer)) {
-            Toast.makeText(this, "Enter an answer", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, R.string.lesson_enter_answer, Toast.LENGTH_SHORT).show();
             return;
         }
         try {
@@ -190,18 +111,6 @@ public class LessonActivityActivity extends LogoutAppCompatActivity {
             body.put("lesson_id", lesson.getInt("id"));
             body.put("answer", answer);
             postActivity(ApiConfig.api("lesson-activities/novice"), body);
-        } catch (Exception e) {
-            Toast.makeText(this, "Error submitting answer", Toast.LENGTH_SHORT).show();
-        }
-    }
-
-    private void submitQuizMode(int quizId, String selected) {
-        try {
-            JSONObject body = new JSONObject();
-            body.put("lesson_id", lesson.getInt("id"));
-            body.put("quiz_id", quizId);
-            body.put("selected", selected);
-            postActivity(ApiConfig.api("lesson-activities/quiz"), body);
         } catch (Exception e) {
             Toast.makeText(this, "Error submitting answer", Toast.LENGTH_SHORT).show();
         }
@@ -216,10 +125,10 @@ public class LessonActivityActivity extends LogoutAppCompatActivity {
                 response -> {
                     boolean correct = response.optBoolean("correct", false);
                     if (correct) {
-                        Toast.makeText(this, "Correct! Moving on…", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(this, R.string.lesson_correct, Toast.LENGTH_SHORT).show();
                         refreshModuleLessonsAndAdvance();
                     } else {
-                        Toast.makeText(this, response.optString("message", "Incorrect — review the lesson."), Toast.LENGTH_LONG).show();
+                        Toast.makeText(this, response.optString("message", getString(R.string.lesson_incorrect)), Toast.LENGTH_LONG).show();
                         returnToLessonSlides();
                     }
                 },

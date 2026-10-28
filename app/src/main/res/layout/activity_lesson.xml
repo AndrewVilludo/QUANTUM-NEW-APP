@@ -8,42 +8,61 @@
     android:padding="@dimen/game_screen_padding">
 
     <TextView
+        android:id="@+id/lessonModuleHint"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textAppearance="@style/TextAppearance.QuantumRealm.Subtitle"
+        android:textColor="@color/game_accent"
+        android:visibility="gone" />
+
+    <TextView
         android:id="@+id/lessonTitleTextView"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
         android:textAppearance="@style/TextAppearance.QuantumRealm.Hero"
         android:textSize="22sp" />
+
+    <TextView
+        android:id="@+id/lessonSwipeHint"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="6dp"
+        android:text="@string/lesson_swipe_hint"
+        android:textAppearance="@style/TextAppearance.QuantumRealm.Subtitle"
+        android:textSize="13sp" />
+
+    <ProgressBar
+        android:id="@+id/lessonSlideProgressBar"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="match_parent"
+        android:layout_height="8dp"
+        android:layout_marginTop="12dp"
+        android:max="100"
+        android:progress="0"
+        android:progressDrawable="@drawable/lesson_progress_bar" />
 
     <TextView
         android:id="@+id/lessonSlideProgress"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="6dp"
-        android:layout_marginBottom="12dp"
+        android:layout_marginBottom="8dp"
         android:textAppearance="@style/TextAppearance.QuantumRealm.Subtitle" />
 
-    <com.google.android.material.card.MaterialCardView
+    <androidx.viewpager2.widget.ViewPager2
+        android:id="@+id/lessonSlidePager"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1"
-        app:cardBackgroundColor="@color/game_surface"
-        app:cardCornerRadius="@dimen/game_card_radius">
+        android:layout_weight="1" />
 
-        <ScrollView
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:padding="20dp">
-
-            <TextView
-                android:id="@+id/lessonSlideContent"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:lineSpacingExtra="4dp"
-                android:textAppearance="@style/TextAppearance.QuantumRealm.Title"
-                android:textColor="@color/game_text_primary"
-                android:textSize="16sp" />
-        </ScrollView>
-    </com.google.android.material.card.MaterialCardView>
+    <LinearLayout
+        android:id="@+id/lessonDotIndicator"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:gravity="center"
+        android:orientation="horizontal" />
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -59,7 +78,7 @@
             android:layout_height="wrap_content"
             android:layout_marginEnd="8dp"
             android:layout_weight="1"
-            android:text="Previous" />
+            android:text="@string/lesson_prev" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/lessonNextButton"
@@ -68,7 +87,7 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
             android:layout_weight="1"
-            android:text="Next" />
+            android:text="@string/lesson_next" />
     </LinearLayout>
 
     <com.google.android.material.button.MaterialButton
@@ -77,7 +96,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="12dp"
-        android:text="Continue to activity"
+        android:text="@string/lesson_start_activity"
         android:visibility="gone" />
 
 </LinearLayout>

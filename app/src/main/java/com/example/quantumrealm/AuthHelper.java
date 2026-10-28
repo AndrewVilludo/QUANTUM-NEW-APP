@@ -15,12 +15,22 @@ public final class AuthHelper {
 
     public static final String PREFS_NAME = "APP_PREFS";
     public static final String TOKEN_KEY = "auth_token";
+    public static final String USER_NAME_KEY = "user_name";
 
     private AuthHelper() {
     }
 
     public static void saveToken(Context context, String token) {
         prefs(context).edit().putString(TOKEN_KEY, token).apply();
+    }
+
+    public static void saveUserName(Context context, String name) {
+        prefs(context).edit().putString(USER_NAME_KEY, name != null ? name.trim() : "").apply();
+    }
+
+    public static String getUserName(Context context) {
+        String name = prefs(context).getString(USER_NAME_KEY, "");
+        return name != null && !name.isEmpty() ? name : "Explorer";
     }
 
     public static String getToken(Context context) {
@@ -33,7 +43,7 @@ public final class AuthHelper {
     }
 
     public static void clearSession(Context context) {
-        prefs(context).edit().remove(TOKEN_KEY).apply();
+        prefs(context).edit().remove(TOKEN_KEY).remove(USER_NAME_KEY).apply();
     }
 
     /** Revokes token on server (best effort), clears local session, returns to login. */

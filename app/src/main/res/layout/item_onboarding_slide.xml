@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    style="@style/Widget.QuantumRealm.Card"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:layout_margin="8dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center_horizontal"
+        android:orientation="vertical"
+        android:padding="28dp">
+
+        <TextView
+            android:id="@+id/onboardingEmoji"
+            android:layout_width="72dp"
+            android:layout_height="72dp"
+            android:background="@drawable/lesson_slide_badge"
+            android:gravity="center"
+            android:textSize="36sp"
+            tools:text="👋" />
+
+        <TextView
+            android:id="@+id/onboardingTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:gravity="center"
+            android:textAppearance="@style/TextAppearance.QuantumRealm.Hero"
+            android:textSize="24sp"
+            tools:text="Welcome, Alex!" />
+
+        <TextView
+            android:id="@+id/onboardingBody"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:gravity="center"
+            android:lineSpacingExtra="4dp"
+            android:textAppearance="@style/TextAppearance.QuantumRealm.Subtitle"
+            android:textColor="@color/game_text_primary"
+            android:textSize="16sp"
+            tools:text="Your quest through Quantum Realm starts here." />
+    </LinearLayout>
+</com.google.android.material.card.MaterialCardView>

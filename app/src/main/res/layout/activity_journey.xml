@@ -27,9 +27,26 @@
         android:fillViewport="true">
 
         <LinearLayout
-            android:id="@+id/buttonContainer"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical" />
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/journeyStatusText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:padding="24dp"
+                android:text="@string/journey_loading"
+                android:textAppearance="@style/TextAppearance.QuantumRealm.Subtitle"
+                android:visibility="visible" />
+
+            <LinearLayout
+                android:id="@+id/buttonContainer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="gone" />
+        </LinearLayout>
     </ScrollView>
 </LinearLayout>

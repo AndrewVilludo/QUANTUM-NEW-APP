@@ -9,6 +9,14 @@
     <string name="module_quiz_subtitle">15 questions — need 60% to pass</string>
     <string name="journey_title">Learning Galaxy</string>
     <string name="journey_subtitle">Pick a year to start your programming quest</string>
+    <string name="journey_loading">Loading year worlds…</string>
+    <string name="journey_load_failed">Could not load year levels.</string>
+    <string name="journey_server_unreachable">Cannot reach the server. Start Laravel with: php artisan serve --host=0.0.0.0 --port=8000</string>
+    <string name="journey_no_years">No year levels found in the CMS.</string>
+    <string name="journey_login_required">Please sign in again to open the Learning Galaxy.</string>
+    <string name="year_enter">Enter this world →</string>
+    <string name="year_completed">Year completed — tap to review</string>
+    <string name="year_locked_hint">Complete all module quizzes in the previous year first</string>
     <string name="quiz_progress">Question %1$d of %2$d</string>
     <string name="logout_confirm_title">Log out?</string>
     <string name="logout_confirm_message">You will need to sign in again to continue your quest.</string>
@@ -27,4 +35,32 @@
     <string name="profile_score_format">Score: %1$d / %2$d (%3$d%%) — %4$s</string>
     <string name="profile_quiz_passed">Passed</string>
     <string name="profile_quiz_not_passed">Not passed</string>
+    <string name="lesson_swipe_hint">Swipe left or right to move between slides</string>
+    <string name="lesson_no_content">No slides yet — continue to the activity when you are ready.</string>
+    <string name="lesson_module_hint">Module: %1$s</string>
+    <string name="lesson_step_of">Step %1$d of %2$d</string>
+    <string name="lesson_progress_label">Slide %1$d of %2$d</string>
+    <string name="lesson_prev">Back</string>
+    <string name="lesson_next">Next slide</string>
+    <string name="lesson_start_activity">Start challenge</string>
+    <string name="lesson_challenge_subtitle">Answer the question below to complete this lesson.</string>
+    <string name="lesson_challenge_badge">⚡ Lesson challenge</string>
+    <string name="lesson_answer_hint">Type your answer</string>
+    <string name="lesson_submit_answer">Submit answer</string>
+    <string name="lesson_enter_answer">Enter an answer</string>
+    <string name="lesson_correct">Correct! Moving on…</string>
+    <string name="lesson_incorrect">Incorrect — review the lesson and try again.</string>
+    <string name="lesson_no_activity">No activity configured for this lesson yet.</string>
+    <string name="onboarding_header">Your quest briefing</string>
+    <string name="onboarding_continue">Continue</string>
+    <string name="onboarding_skip">Skip to galaxy</string>
+    <string name="onboarding_enter_galaxy">Enter the galaxy</string>
+    <string name="onboarding_welcome_title">Welcome, %1$s!</string>
+    <string name="onboarding_welcome_body">You have entered Quantum Realm — learn programming worlds year by year and level up your skills.</string>
+    <string name="onboarding_lessons_title">Swipe through lessons</string>
+    <string name="onboarding_lessons_body">Each lesson uses interactive slides. Finish the challenge at the end to unlock the next lesson in the module.</string>
+    <string name="onboarding_quiz_title">Pass module quizzes</string>
+    <string name="onboarding_quiz_body">After every module, take the 15-question quiz. Score at least 60% to advance — or replay the module from the start.</string>
+    <string name="onboarding_launch_title">Ready to explore?</string>
+    <string name="onboarding_launch_body">Pick your year, choose a subject, and begin your adventure. Tap below to open the Learning Galaxy.</string>
 </resources>

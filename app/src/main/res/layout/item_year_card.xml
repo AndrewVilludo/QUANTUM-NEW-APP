@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/yearCardRoot"
     style="@style/Widget.QuantumRealm.Card"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
@@ -39,11 +40,20 @@
                 android:textSize="20sp" />
 
             <TextView
+                android:id="@+id/yearSubtitle"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="4dp"
-                android:text="Enter this world →"
+                android:text="@string/year_enter"
                 android:textAppearance="@style/TextAppearance.QuantumRealm.Subtitle" />
         </LinearLayout>
+
+        <ImageView
+            android:id="@+id/yearLockIcon"
+            android:layout_width="28dp"
+            android:layout_height="28dp"
+            android:contentDescription="@string/locked_level"
+            android:src="@android:drawable/ic_lock_lock"
+            android:visibility="gone" />
     </LinearLayout>
 </com.google.android.material.card.MaterialCardView>

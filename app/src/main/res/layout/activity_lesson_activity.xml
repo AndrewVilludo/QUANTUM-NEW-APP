@@ -19,44 +19,17 @@
             android:textSize="22sp" />
 
         <TextView
+            android:id="@+id/activityLessonSubtitle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="6dp"
             android:layout_marginBottom="16dp"
-            android:text="Choose a mode, then answer the lesson question"
             android:textAppearance="@style/TextAppearance.QuantumRealm.Subtitle" />
-
-        <LinearLayout
-            android:id="@+id/modeChoiceRow"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal">
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/modeNoviceButton"
-                style="@style/Widget.QuantumRealm.Button.Primary"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginEnd="8dp"
-                android:layout_weight="1"
-                android:text="Novice mode" />
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/modeQuizButton"
-                style="@style/Widget.QuantumRealm.Button.Secondary"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="8dp"
-                android:layout_weight="1"
-                android:text="Quiz mode" />
-        </LinearLayout>
 
         <LinearLayout
             android:id="@+id/activityContainer"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:orientation="vertical"
-            android:visibility="gone" />
+            android:orientation="vertical" />
     </LinearLayout>
 </ScrollView>
