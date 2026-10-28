@@ -21,6 +21,8 @@ public class CourseActivity extends LogoutAppCompatActivity {
     private static final String BASE_URL = ApiConfig.api("subject-modules/");
 
     private RequestQueue requestQueue;
+    private int subjectId;
+    private String courseName;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -31,19 +33,26 @@ public class CourseActivity extends LogoutAppCompatActivity {
         moduleContainer = findViewById(R.id.moduleContainer);
         requestQueue = Volley.newRequestQueue(this);
 
-        // ✅ FIX: Correctly get course_id and course_name from intent
         Intent intent = getIntent();
-        int courseId = intent.getIntExtra("course_id", 0);
-        String courseName = intent.getStringExtra("course_name");
+        subjectId = intent.getIntExtra("course_id", 0);
+        courseName = intent.getStringExtra("course_name");
 
         courseTitleTextView.setText(courseName);
-
-        // ✅ Use correct course_id in API call
-        fetchModulesFromApi(courseId);
-        fetchSubjectProgress(courseId, courseName);
     }
 
-    private void fetchSubjectProgress(int subjectId, String courseName) {
+    @Override
+    protected void onResume() {
+        super.onResume();
+        loadModulePath();
+    }
+
+    private void loadModulePath() {
+        moduleContainer.removeAllViews();
+        fetchModulesFromApi(subjectId);
+        fetchSubjectProgress(subjectId);
+    }
+
+    private void fetchSubjectProgress(int subjectId) {
         AuthenticatedJsonObjectRequest request = new AuthenticatedJsonObjectRequest(
                 this,
                 Request.Method.GET,
@@ -96,9 +105,15 @@ public class CourseActivity extends LogoutAppCompatActivity {
                             int yearId = getIntent().getIntExtra("year_id", 0);
                             int index = moduleContainer.getChildCount();
 
-                            String subtitle = completed
-                                    ? getString(R.string.module_completed)
-                                    : getString(R.string.module_ready);
+                            String subtitle;
+                            if (completed) {
+                                subtitle = getString(R.string.module_completed);
+                            } else if (quizReady && unlocked) {
+                                subtitle = getString(R.string.module_quiz_pending);
+                            } else {
+                                subtitle = getString(R.string.module_ready);
+                            }
+
                             moduleContainer.addView(UiHelper.inflatePathCard(
                                     this,
                                     moduleContainer,
@@ -121,6 +136,17 @@ public class CourseActivity extends LogoutAppCompatActivity {
                                         false,
                                         () -> openModuleQuiz(moduleId, moduleName)
                                 ));
+                            } else if (completed) {
+                                moduleContainer.addView(UiHelper.inflatePathCard(
+                                        this,
+                                        moduleContainer,
+                                        getString(R.string.module_quiz_title, moduleName),
+                                        getString(R.string.module_quiz_passed),
+                                        "📝",
+                                        false,
+                                        true,
+                                        () -> openModuleQuiz(moduleId, moduleName)
+                                ));
                             }
                         }
 
@@ -140,15 +166,14 @@ public class CourseActivity extends LogoutAppCompatActivity {
 
     private void openModuleActivity(int moduleId, String moduleName, int yearId) {
         Intent intent = new Intent(this, ModuleActivity.class);
-        intent.putExtra("course_id", moduleId);  // Ensure this is the correct course ID
-        intent.putExtra("course_name", moduleName);  // Ensure this is the correct course name
+        intent.putExtra("course_id", moduleId);
+        intent.putExtra("course_name", moduleName);
         intent.putExtra("year_id", yearId);
-        intent.putExtra("subject_id", getIntent().getIntExtra("course_id", 0));
+        intent.putExtra("subject_id", subjectId);
         startActivity(intent);
     }
 
     private void openModuleQuiz(int moduleId, String moduleName) {
-        int subjectId = getIntent().getIntExtra("course_id", 0);
         startActivity(ModuleFlowHelper.moduleQuizIntent(this, moduleId, moduleName, subjectId));
     }
 

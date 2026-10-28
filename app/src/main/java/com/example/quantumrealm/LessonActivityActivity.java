@@ -4,17 +4,15 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.View;
+import android.view.inputmethod.EditorInfo;
 import android.widget.EditText;
-import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
-
-import androidx.core.content.ContextCompat;
 
 import com.android.volley.Request;
 import com.android.volley.toolbox.Volley;
 import com.google.android.material.button.MaterialButton;
-import com.google.android.material.card.MaterialCardView;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -27,17 +25,28 @@ public class LessonActivityActivity extends LogoutAppCompatActivity {
     private String moduleName;
     private int subjectId;
 
-    private LinearLayout activityContainer;
     private JSONArray moduleLessonsCache;
+
+    private TextView challengeTitle;
+    private TextView difficultyBadge;
+    private TextView questionText;
+    private EditText answerInput;
+    private MaterialButton submitButton;
+    private ProgressBar submitProgress;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_lesson_activity);
 
-        activityContainer = findViewById(R.id.activityContainer);
         TextView title = findViewById(R.id.activityLessonTitle);
         TextView subtitle = findViewById(R.id.activityLessonSubtitle);
+        challengeTitle = findViewById(R.id.activityChallengeTitle);
+        difficultyBadge = findViewById(R.id.activityDifficultyBadge);
+        questionText = findViewById(R.id.activityQuestionText);
+        answerInput = findViewById(R.id.activityAnswerInput);
+        submitButton = findViewById(R.id.activitySubmitButton);
+        submitProgress = findViewById(R.id.activitySubmitProgress);
 
         try {
             lesson = new JSONObject(getIntent().getStringExtra(ModuleFlowHelper.EXTRA_LESSON));
@@ -53,65 +62,69 @@ public class LessonActivityActivity extends LogoutAppCompatActivity {
             return;
         }
 
-        activityContainer.setVisibility(View.VISIBLE);
-
         JSONArray activity = lesson.optJSONArray("activity");
         if (activity != null && activity.length() > 0) {
-            showNoviceQuestion(activity.optJSONObject(0));
+            bindNoviceQuestion(activity.optJSONObject(0));
         } else {
             Toast.makeText(this, R.string.lesson_no_activity, Toast.LENGTH_LONG).show();
             finish();
         }
     }
 
-    private void showNoviceQuestion(JSONObject activityItem) {
-        activityContainer.removeAllViews();
+    private void bindNoviceQuestion(JSONObject activityItem) {
+        if (activityItem == null) {
+            return;
+        }
 
-        MaterialCardView card = buildCard();
-        LinearLayout inner = (LinearLayout) card.getChildAt(0);
+        String activityTitle = activityItem.optString("title", "");
+        if (TextUtils.isEmpty(activityTitle)) {
+            activityTitle = getString(R.string.lesson_challenge_badge);
+        }
+        challengeTitle.setText(activityTitle);
 
-        TextView badge = new TextView(this);
-        badge.setText(R.string.lesson_challenge_badge);
-        badge.setTextColor(ContextCompat.getColor(this, R.color.game_accent));
-        inner.addView(badge);
+        String difficulty = activityItem.optString("difficulty", "novice");
+        difficultyBadge.setText(getString(R.string.lesson_activity_difficulty, capitalize(difficulty)));
+        questionText.setText(activityItem.optString("question", "Question"));
 
-        TextView question = new TextView(this);
-        question.setText(activityItem.optString("question", "Question"));
-        question.setTextAppearance(R.style.TextAppearance_QuantumRealm_Title);
-        question.setPadding(0, 16, 0, 0);
-        inner.addView(question);
+        submitButton.setOnClickListener(v -> submitNovice(answerInput.getText().toString().trim()));
+        answerInput.setOnEditorActionListener((v, actionId, event) -> {
+            if (actionId == EditorInfo.IME_ACTION_DONE) {
+                submitNovice(answerInput.getText().toString().trim());
+                return true;
+            }
+            return false;
+        });
+        answerInput.requestFocus();
+    }
 
-        EditText input = new EditText(this);
-        input.setHint(R.string.lesson_answer_hint);
-        input.setBackgroundResource(R.drawable.input_field_game);
-        input.setPadding(48, 36, 48, 36);
-        LinearLayout.LayoutParams inputParams = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-        );
-        inputParams.topMargin = 20;
-        input.setLayoutParams(inputParams);
-        inner.addView(input);
+    private static String capitalize(String value) {
+        if (value == null || value.isEmpty()) {
+            return value;
+        }
+        return value.substring(0, 1).toUpperCase() + value.substring(1).toLowerCase();
+    }
 
-        MaterialButton submit = primaryButton(getString(R.string.lesson_submit_answer));
-        submit.setOnClickListener(v -> submitNovice(input.getText().toString().trim()));
-        inner.addView(submit);
-
-        activityContainer.addView(card);
-        input.requestFocus();
+    private void setSubmitting(boolean submitting) {
+        submitButton.setEnabled(!submitting);
+        submitButton.setText(submitting ? R.string.lesson_submit_checking : R.string.lesson_submit_answer_cta);
+        submitProgress.setVisibility(submitting ? View.VISIBLE : View.GONE);
+        answerInput.setEnabled(!submitting);
     }
 
     private void submitNovice(String answer) {
         if (TextUtils.isEmpty(answer)) {
             Toast.makeText(this, R.string.lesson_enter_answer, Toast.LENGTH_SHORT).show();
+            answerInput.requestFocus();
             return;
         }
         try {
             JSONObject body = new JSONObject();
             body.put("lesson_id", lesson.getInt("id"));
             body.put("answer", answer);
+            setSubmitting(true);
             postActivity(ApiConfig.api("lesson-activities/novice"), body);
         } catch (Exception e) {
+            setSubmitting(false);
             Toast.makeText(this, "Error submitting answer", Toast.LENGTH_SHORT).show();
         }
     }
@@ -123,6 +136,7 @@ public class LessonActivityActivity extends LogoutAppCompatActivity {
                 url,
                 body,
                 response -> {
+                    setSubmitting(false);
                     boolean correct = response.optBoolean("correct", false);
                     if (correct) {
                         Toast.makeText(this, R.string.lesson_correct, Toast.LENGTH_SHORT).show();
@@ -132,7 +146,10 @@ public class LessonActivityActivity extends LogoutAppCompatActivity {
                         returnToLessonSlides();
                     }
                 },
-                error -> Toast.makeText(this, "Could not submit answer", Toast.LENGTH_SHORT).show()
+                error -> {
+                    setSubmitting(false);
+                    Toast.makeText(this, "Could not submit answer", Toast.LENGTH_SHORT).show();
+                }
         );
         Volley.newRequestQueue(this).add(request);
     }
@@ -168,28 +185,5 @@ public class LessonActivityActivity extends LogoutAppCompatActivity {
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         startActivity(intent);
         finish();
-    }
-
-    private MaterialCardView buildCard() {
-        MaterialCardView card = new MaterialCardView(this);
-        card.setRadius(getResources().getDimension(R.dimen.game_card_radius));
-        card.setCardBackgroundColor(ContextCompat.getColor(this, R.color.game_surface));
-        card.setContentPadding(32, 32, 32, 32);
-        LinearLayout inner = new LinearLayout(this);
-        inner.setOrientation(LinearLayout.VERTICAL);
-        card.addView(inner);
-        return card;
-    }
-
-    private MaterialButton primaryButton(String text) {
-        MaterialButton button = new MaterialButton(this, null, R.style.Widget_QuantumRealm_Button_Primary);
-        button.setText(text);
-        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-        );
-        params.topMargin = 24;
-        button.setLayoutParams(params);
-        return button;
     }
 }

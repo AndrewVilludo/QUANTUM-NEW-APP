@@ -43,6 +43,7 @@ public final class UiHelper {
         TextView emojiView = card.findViewById(R.id.pathEmoji);
         TextView titleView = card.findViewById(R.id.pathTitle);
         TextView subtitleView = card.findViewById(R.id.pathSubtitle);
+        TextView completedBadge = card.findViewById(R.id.pathCompletedBadge);
         ImageView lockIcon = card.findViewById(R.id.pathLockIcon);
         ImageView completeIcon = card.findViewById(R.id.pathCompleteIcon);
         MaterialCardView root = card.findViewById(R.id.pathCardRoot);
@@ -52,8 +53,13 @@ public final class UiHelper {
 
         lockIcon.setVisibility(View.GONE);
         completeIcon.setVisibility(View.GONE);
+        if (completedBadge != null) {
+            completedBadge.setVisibility(View.GONE);
+        }
         root.setAlpha(1f);
         root.setCardBackgroundColor(ContextCompat.getColor(context, R.color.game_surface));
+        root.setStrokeWidth(completed ? 2 : 1);
+        root.setStrokeColor(ContextCompat.getColor(context, completed ? R.color.game_success : R.color.game_stroke));
 
         if (locked) {
             subtitleView.setText(R.string.module_locked_hint);
@@ -66,6 +72,9 @@ public final class UiHelper {
             subtitleView.setText(R.string.module_completed);
             subtitleView.setTextColor(ContextCompat.getColor(context, R.color.game_success));
             completeIcon.setVisibility(View.VISIBLE);
+            if (completedBadge != null) {
+                completedBadge.setVisibility(View.VISIBLE);
+            }
             root.setCardBackgroundColor(ContextCompat.getColor(context, R.color.game_success_soft));
             root.setOnClickListener(v -> {
                 Toast.makeText(context, R.string.module_completed_toast, Toast.LENGTH_SHORT).show();

@@ -2,6 +2,9 @@
     <string name="app_name">Quantum Realm</string>
     <string name="locked_level">Level locked</string>
     <string name="module_completed">Module completed</string>
+    <string name="module_completed_badge">Done</string>
+    <string name="module_quiz_pending">Lessons done — take the module quiz</string>
+    <string name="module_quiz_passed">Module quiz passed</string>
     <string name="module_ready">Tap to start lessons</string>
     <string name="module_locked_hint">Complete the previous module first</string>
     <string name="module_completed_toast">You already finished this module.</string>
@@ -47,6 +50,10 @@
     <string name="lesson_challenge_badge">⚡ Lesson challenge</string>
     <string name="lesson_answer_hint">Type your answer</string>
     <string name="lesson_submit_answer">Submit answer</string>
+    <string name="lesson_submit_answer_cta">Check my answer</string>
+    <string name="lesson_submit_checking">Checking…</string>
+    <string name="lesson_question_label">Question</string>
+    <string name="lesson_activity_difficulty">Difficulty: %1$s</string>
     <string name="lesson_enter_answer">Enter an answer</string>
     <string name="lesson_correct">Correct! Moving on…</string>
     <string name="lesson_incorrect">Incorrect — review the lesson and try again.</string>
