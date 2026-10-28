@@ -41,20 +41,29 @@ public final class ModuleFlowHelper {
     public static void openNextAfterCompletion(Context context, int moduleId, String moduleName,
                                                  int subjectId, JSONArray lessons, int completedIndex) {
         int nextIndex = completedIndex + 1;
-        if (nextIndex < lessons.length()) {
-            try {
+        try {
+            if (nextIndex < lessons.length()) {
                 JSONObject nextLesson = lessons.getJSONObject(nextIndex);
                 Intent intent = slideshowIntent(context, nextLesson, nextIndex, moduleId, moduleName, subjectId);
                 intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
                 context.startActivity(intent);
-            } catch (Exception ignored) {
-                backToCourse(context, subjectId);
+            } else {
+                Intent intent = questContinueIntent(context, moduleId, moduleName, subjectId);
+                intent.putExtra(QuestContinueActivity.EXTRA_MODE, QuestContinueActivity.MODE_QUIZ_GATE);
+                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                context.startActivity(intent);
             }
-        } else {
-            Intent intent = moduleQuizIntent(context, moduleId, moduleName, subjectId);
-            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-            context.startActivity(intent);
+        } catch (Exception ignored) {
+            backToCourse(context, subjectId);
         }
+    }
+
+    public static Intent questContinueIntent(Context context, int moduleId, String moduleName, int subjectId) {
+        Intent intent = new Intent(context, QuestContinueActivity.class);
+        intent.putExtra(EXTRA_MODULE_ID, moduleId);
+        intent.putExtra(EXTRA_MODULE_NAME, moduleName);
+        intent.putExtra(EXTRA_SUBJECT_ID, subjectId);
+        return intent;
     }
 
     public static Intent moduleQuizIntent(Context context, int moduleId, String moduleName, int subjectId) {
@@ -79,5 +88,35 @@ public final class ModuleFlowHelper {
         intent.putExtra("course_id", subjectId);
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         context.startActivity(intent);
+    }
+
+    public static void continueQuestFromDashboard(Context context, JSONObject quest) {
+        if (quest == null) {
+            context.startActivity(new Intent(context, Journey.class));
+            return;
+        }
+        String type = quest.optString("type", "");
+        int subjectId = quest.optInt("subject_id", -1);
+        int moduleId = quest.optInt("module_id", -1);
+        String moduleName = quest.optString("module_name", "Module");
+        int yearId = quest.optInt("year_id", 0);
+
+        if ("module_quiz".equals(type) && moduleId > 0 && subjectId > 0) {
+            context.startActivity(moduleQuizIntent(context, moduleId, moduleName, subjectId));
+            return;
+        }
+
+        if ("lesson".equals(type) && moduleId > 0 && subjectId > 0) {
+            Intent intent = new Intent(context, ModuleActivity.class);
+            intent.putExtra("course_id", moduleId);
+            intent.putExtra("course_name", moduleName);
+            intent.putExtra("subject_id", subjectId);
+            intent.putExtra("year_id", yearId);
+            intent.putExtra("auto_continue", true);
+            context.startActivity(intent);
+            return;
+        }
+
+        context.startActivity(new Intent(context, Journey.class));
     }
 }

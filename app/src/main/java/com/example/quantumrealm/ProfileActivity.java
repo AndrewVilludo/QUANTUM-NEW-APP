@@ -8,6 +8,8 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.material.card.MaterialCardView;
+
 import androidx.core.content.ContextCompat;
 
 import com.android.volley.Request;
@@ -23,6 +25,13 @@ public class ProfileActivity extends LogoutAppCompatActivity {
     private LinearLayout scoresContainer;
     private TextView nameText;
     private TextView emailText;
+    private MaterialCardView dashboardCard;
+    private TextView xpText;
+    private TextView streakText;
+    private TextView dailyGoalText;
+    private TextView badgesText;
+    private MaterialButton continueQuestButton;
+    private JSONObject continueQuest;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -33,7 +42,15 @@ public class ProfileActivity extends LogoutAppCompatActivity {
         emailText = findViewById(R.id.profileEmailText);
         scoresContainer = findViewById(R.id.profileScoresContainer);
         MaterialButton logoutButton = findViewById(R.id.profileLogoutButton);
+        dashboardCard = findViewById(R.id.profileDashboardCard);
+        xpText = findViewById(R.id.profileXpText);
+        streakText = findViewById(R.id.profileStreakText);
+        dailyGoalText = findViewById(R.id.profileDailyGoalText);
+        badgesText = findViewById(R.id.profileBadgesText);
+        continueQuestButton = findViewById(R.id.profileContinueQuestButton);
 
+        continueQuestButton.setOnClickListener(v ->
+                ModuleFlowHelper.continueQuestFromDashboard(this, continueQuest));
         logoutButton.setOnClickListener(v -> confirmLogout());
         loadProfile();
     }
@@ -68,6 +85,7 @@ public class ProfileActivity extends LogoutAppCompatActivity {
                         JSONObject user = response.getJSONObject("user");
                         nameText.setText(user.optString("name", "Student"));
                         emailText.setText(user.optString("email", ""));
+                        bindDashboard(response.optJSONObject("dashboard"));
 
                         scoresContainer.removeAllViews();
                         JSONArray subjects = response.optJSONArray("quiz_scores_by_subject");
@@ -88,6 +106,34 @@ public class ProfileActivity extends LogoutAppCompatActivity {
                 error -> Toast.makeText(this, R.string.profile_load_failed, Toast.LENGTH_SHORT).show()
         );
         Volley.newRequestQueue(this).add(request);
+    }
+
+    private void bindDashboard(JSONObject dashboard) {
+        if (dashboard == null) {
+            dashboardCard.setVisibility(View.GONE);
+            return;
+        }
+        dashboardCard.setVisibility(View.VISIBLE);
+        xpText.setText(getString(R.string.profile_xp_format, dashboard.optInt("quantum_xp", 0)));
+        streakText.setText(getString(R.string.profile_streak_format, dashboard.optInt("daily_streak", 0)));
+        dailyGoalText.setText(getString(
+                R.string.profile_daily_goal_format,
+                dashboard.optInt("lessons_completed_today", 0),
+                dashboard.optInt("daily_lesson_goal", 1)));
+        JSONArray badges = dashboard.optJSONArray("badges");
+        int earned = 0;
+        int total = 0;
+        if (badges != null) {
+            total = badges.length();
+            for (int i = 0; i < badges.length(); i++) {
+                if (badges.optJSONObject(i).optBoolean("earned", false)) {
+                    earned++;
+                }
+            }
+        }
+        badgesText.setText(getString(R.string.profile_badges_format, earned, total));
+        continueQuest = dashboard.optJSONObject("continue_quest");
+        continueQuestButton.setVisibility(continueQuest != null ? View.VISIBLE : View.GONE);
     }
 
     private void addEmptyScoresMessage() {

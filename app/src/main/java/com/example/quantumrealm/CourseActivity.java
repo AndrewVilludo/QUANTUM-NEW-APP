@@ -2,9 +2,12 @@ package com.example.quantumrealm;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
@@ -17,6 +20,8 @@ public class CourseActivity extends LogoutAppCompatActivity {
 
     private LinearLayout moduleContainer;
     private TextView courseTitleTextView;
+    private TextView courseMissionText;
+    private SwipeRefreshLayout courseSwipeRefresh;
 
     private static final String BASE_URL = ApiConfig.api("subject-modules/");
 
@@ -30,6 +35,8 @@ public class CourseActivity extends LogoutAppCompatActivity {
         setContentView(R.layout.activity_course);
 
         courseTitleTextView = findViewById(R.id.courseTitleTextView);
+        courseMissionText = findViewById(R.id.courseMissionText);
+        courseSwipeRefresh = findViewById(R.id.courseSwipeRefresh);
         moduleContainer = findViewById(R.id.moduleContainer);
         requestQueue = Volley.newRequestQueue(this);
 
@@ -38,6 +45,16 @@ public class CourseActivity extends LogoutAppCompatActivity {
         courseName = intent.getStringExtra("course_name");
 
         courseTitleTextView.setText(courseName);
+        String mission = intent.getStringExtra("course_mission");
+        if (mission != null && !mission.isEmpty()) {
+            courseMissionText.setText(getString(R.string.subject_mission_prefix, mission));
+        } else {
+            courseMissionText.setVisibility(View.GONE);
+        }
+        courseSwipeRefresh.setOnRefreshListener(() -> {
+            loadModulePath();
+            courseSwipeRefresh.setRefreshing(false);
+        });
     }
 
     @Override

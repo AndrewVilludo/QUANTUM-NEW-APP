@@ -23,6 +23,7 @@
         <activity android:name=".LessonActivityActivity"/>
         <activity android:name=".SubjectFinalQuizActivity"/>
         <activity android:name=".ModuleQuizActivity"/>
+        <activity android:name=".QuestContinueActivity"/>
         <activity android:name=".ProfileActivity"/>
         <activity android:name=".CourseActivity"/>
         <activity android:name=".Register"/>

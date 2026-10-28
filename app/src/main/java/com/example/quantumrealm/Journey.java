@@ -19,6 +19,8 @@ import androidx.core.content.ContextCompat;
 
 import com.google.android.material.card.MaterialCardView;
 
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
+
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -26,6 +28,7 @@ public class Journey extends LogoutAppCompatActivity {
 
     private LinearLayout buttonContainer;
     private TextView journeyStatusText;
+    private SwipeRefreshLayout journeySwipeRefresh;
     private RequestQueue requestQueue;
 
     @Override
@@ -35,7 +38,12 @@ public class Journey extends LogoutAppCompatActivity {
 
         buttonContainer = findViewById(R.id.buttonContainer);
         journeyStatusText = findViewById(R.id.journeyStatusText);
+        journeySwipeRefresh = findViewById(R.id.journeySwipeRefresh);
         requestQueue = Volley.newRequestQueue(this);
+        journeySwipeRefresh.setOnRefreshListener(() -> {
+            loadGalaxyYears();
+            journeySwipeRefresh.setRefreshing(false);
+        });
     }
 
     @Override
@@ -159,8 +167,17 @@ public class Journey extends LogoutAppCompatActivity {
                 root.setAlpha(1f);
             }
 
+            int modulesCompleted = year.optInt("modules_completed", 0);
+            int modulesTotal = year.optInt("modules_total", 0);
+            int progressPercent = year.optInt("progress_percent", 0);
+
             if (!isUnlocked) {
-                subtitleText.setText(R.string.year_locked_hint);
+                if (modulesTotal > 0) {
+                    subtitleText.setText(getString(R.string.year_progress_format,
+                            modulesCompleted, modulesTotal, progressPercent));
+                } else {
+                    subtitleText.setText(R.string.year_locked_hint);
+                }
                 if (lockIcon != null) {
                     lockIcon.setVisibility(View.VISIBLE);
                 }

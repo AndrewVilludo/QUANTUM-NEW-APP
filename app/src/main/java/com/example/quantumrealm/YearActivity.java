@@ -8,7 +8,6 @@ import android.widget.Toast;
 
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
-import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
 
 import org.json.JSONArray;
@@ -56,7 +55,8 @@ public class YearActivity extends LogoutAppCompatActivity {
         String url = BASE_URL + yearId;
 
         // Create the API request
-        JsonObjectRequest request = new JsonObjectRequest(
+        AuthenticatedJsonObjectRequest request = new AuthenticatedJsonObjectRequest(
+                this,
                 Request.Method.GET, url, null,
                 response -> {
                     try {
@@ -70,16 +70,20 @@ public class YearActivity extends LogoutAppCompatActivity {
                             if (course.getInt("year_id") == yearId) {
                                 String courseName = course.getString("name");
                                 int courseId = course.getInt("id");
+                                String mission = course.optString("mission", "");
 
                                 int index = courseContainer.getChildCount();
+                                String subtitle = mission.isEmpty()
+                                        ? "Subject quest · tap to open"
+                                        : mission;
                                 courseContainer.addView(UiHelper.inflatePathCard(
                                         this,
                                         courseContainer,
                                         courseName,
-                                        "Subject quest · tap to open",
+                                        subtitle,
                                         UiHelper.emojiForIndex(index),
                                         false,
-                                        () -> openCourseActivity(courseId, courseName)
+                                        () -> openCourseActivity(courseId, courseName, mission)
                                 ));
                             }
                         }
@@ -101,10 +105,11 @@ public class YearActivity extends LogoutAppCompatActivity {
     }
 
     // Open the CourseActivity with the selected course's ID and name
-    private void openCourseActivity(int courseId, String courseName) {
+    private void openCourseActivity(int courseId, String courseName, String mission) {
         Intent intent = new Intent(this, CourseActivity.class);
         intent.putExtra("course_id", courseId);
         intent.putExtra("course_name", courseName);
+        intent.putExtra("course_mission", mission);
         intent.putExtra("year_id", getIntent().getIntExtra("year_id", 0));
         startActivity(intent);
     }

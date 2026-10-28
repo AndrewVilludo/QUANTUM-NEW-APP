@@ -34,6 +34,7 @@ public class ModuleQuizActivity extends LogoutAppCompatActivity {
     private final List<Question> questionList = new ArrayList<>();
     private final Map<Integer, String> selectedByQuizId = new HashMap<>();
     private int currentQuestionIndex = 0;
+    private int correctStreak = 0;
     private int moduleId;
     private int subjectId;
     private String moduleName;
@@ -183,7 +184,16 @@ public class ModuleQuizActivity extends LogoutAppCompatActivity {
             return;
         }
         RadioButton selected = findViewById(selectedId);
-        selectedByQuizId.put(current.getId(), selected.getText().toString());
+        String selectedText = selected.getText().toString();
+        selectedByQuizId.put(current.getId(), selectedText);
+        if (selectedText.equals(current.getCorrectAnswerText())) {
+            correctStreak++;
+            FeedbackHelper.successHaptic(optionsGroup);
+        } else {
+            correctStreak = 0;
+            FeedbackHelper.errorHaptic(optionsGroup);
+        }
+        scoreText.setText(getString(R.string.quiz_streak_format, correctStreak));
         currentQuestionIndex++;
         handler.postDelayed(this::showNextQuestion, 400);
     }
@@ -213,21 +223,45 @@ public class ModuleQuizActivity extends LogoutAppCompatActivity {
                         int percent = response.optInt("percent", 0);
                         String title = passed ? "Module quiz passed!" : "Module quiz score";
                         String scoreLine = "Your score: " + score + " / " + total + " (" + percent + "%)";
-                        String fullMessage = scoreLine + "\n\n" + response.optString("message", "");
-                        new AlertDialog.Builder(this)
-                                .setTitle(title)
-                                .setMessage(fullMessage)
-                                .setCancelable(false)
-                                .setPositiveButton("OK", (d, w) -> {
-                                    if (passed) {
-                                        ModuleFlowHelper.backToCourse(this, subjectId);
+                        StringBuilder review = new StringBuilder(scoreLine);
+                        review.append("\n\n").append(getString(R.string.quiz_review_title)).append("\n");
+                        try {
+                            JSONArray rows = response.optJSONArray("review");
+                            if (rows != null) {
+                                for (int i = 0; i < rows.length(); i++) {
+                                    JSONObject row = rows.getJSONObject(i);
+                                    review.append("\n• ");
+                                    if (row.optBoolean("is_correct", false)) {
+                                        review.append("Correct");
                                     } else {
+                                        review.append("Wrong — answer: ").append(row.optString("correct", ""));
+                                    }
+                                }
+                            }
+                        } catch (Exception ignored) {
+                        }
+                        JSONObject engagement = response.optJSONObject("engagement");
+                        if (engagement != null) {
+                            review.append("\n\n+").append(engagement.optInt("xp_awarded", 0)).append(" Quantum XP");
+                        }
+                        review.append("\n\n").append(response.optString("message", ""));
+                        if (passed) {
+                            FeedbackHelper.celebrate(this, title, review.toString(), () -> {
+                                ModuleFlowHelper.backToCourse(this, subjectId);
+                                finish();
+                            });
+                        } else {
+                            new AlertDialog.Builder(this)
+                                    .setTitle(title)
+                                    .setMessage(review.toString())
+                                    .setCancelable(false)
+                                    .setPositiveButton("OK", (d, w) -> {
                                         ModuleFlowHelper.restartModuleFromFirstLesson(
                                                 this, moduleId, moduleName, subjectId);
-                                    }
-                                    finish();
-                                })
-                                .show();
+                                        finish();
+                                    })
+                                    .show();
+                        }
                     },
                     error -> Toast.makeText(this, "Submit failed", Toast.LENGTH_SHORT).show()
             );

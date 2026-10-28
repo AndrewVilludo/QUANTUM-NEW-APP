@@ -98,6 +98,15 @@
         </com.google.android.material.card.MaterialCardView>
 
         <com.google.android.material.button.MaterialButton
+            android:id="@+id/activityHintButton"
+            style="@style/Widget.QuantumRealm.Button.Secondary"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="@string/activity_hint_button"
+            android:visibility="gone" />
+
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/activitySubmitButton"
             style="@style/Widget.QuantumRealm.Button.ChallengeSubmit"
             android:layout_width="match_parent"

@@ -7,16 +7,23 @@ import android.view.View;
 import android.view.animation.DecelerateInterpolator;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
+import android.widget.RadioButton;
+import android.widget.RadioGroup;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.viewpager2.widget.MarginPageTransformer;
 import androidx.viewpager2.widget.ViewPager2;
 
+import com.android.volley.Request;
+import com.android.volley.toolbox.Volley;
 import com.google.android.material.button.MaterialButton;
+import com.google.android.material.card.MaterialCardView;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
+
+import java.util.HashSet;
+import java.util.Set;
 
 public class LessonActivity extends LogoutAppCompatActivity {
 
@@ -29,22 +36,33 @@ public class LessonActivity extends LogoutAppCompatActivity {
     private LinearLayout lessonDotIndicator;
     private MaterialButton lessonPrevButton;
     private MaterialButton lessonNextButton;
-    private MaterialButton lessonContinueActivityButton;
+    private MaterialCardView microCheckCard;
+    private TextView microCheckQuestion;
+    private RadioGroup microCheckOptions;
+    private MaterialButton microCheckButton;
 
     private JSONArray slides = new JSONArray();
     private int slideIndex = 0;
+    private final Set<Integer> microChecksPassed = new HashSet<>();
 
     private JSONObject lesson;
     private int lessonIndex;
     private int moduleId;
     private String moduleName;
     private int subjectId;
+    private int lessonId;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_lesson);
 
+        bindViews();
+        loadLessonFromIntent();
+        setupPager();
+    }
+
+    private void bindViews() {
         lessonTitleTextView = findViewById(R.id.lessonTitleTextView);
         lessonModuleHint = findViewById(R.id.lessonModuleHint);
         lessonSwipeHint = findViewById(R.id.lessonSwipeHint);
@@ -54,15 +72,26 @@ public class LessonActivity extends LogoutAppCompatActivity {
         lessonDotIndicator = findViewById(R.id.lessonDotIndicator);
         lessonPrevButton = findViewById(R.id.lessonPrevButton);
         lessonNextButton = findViewById(R.id.lessonNextButton);
-        lessonContinueActivityButton = findViewById(R.id.lessonContinueActivityButton);
+        microCheckCard = findViewById(R.id.lessonMicroCheckCard);
+        microCheckQuestion = findViewById(R.id.lessonMicroCheckQuestion);
+        microCheckOptions = findViewById(R.id.lessonMicroCheckOptions);
+        microCheckButton = findViewById(R.id.lessonMicroCheckButton);
 
+        lessonPrevButton.setOnClickListener(v -> goToSlide(slideIndex - 1));
+        lessonNextButton.setOnClickListener(v -> attemptAdvance());
+        microCheckButton.setOnClickListener(v -> submitMicroCheck());
+    }
+
+    private void loadLessonFromIntent() {
         Intent intent = getIntent();
+        lessonId = -1;
         try {
             lesson = new JSONObject(intent.getStringExtra(ModuleFlowHelper.EXTRA_LESSON));
             lessonIndex = intent.getIntExtra(ModuleFlowHelper.EXTRA_LESSON_INDEX, 0);
             moduleId = intent.getIntExtra(ModuleFlowHelper.EXTRA_MODULE_ID, -1);
             moduleName = intent.getStringExtra(ModuleFlowHelper.EXTRA_MODULE_NAME);
             subjectId = intent.getIntExtra(ModuleFlowHelper.EXTRA_SUBJECT_ID, -1);
+            lessonId = lesson.optInt("id", -1);
 
             lessonTitleTextView.setText(lesson.optString("name", moduleName));
             if (moduleName != null && !moduleName.isEmpty()) {
@@ -75,12 +104,19 @@ public class LessonActivity extends LogoutAppCompatActivity {
                 slides = new JSONArray();
             }
             slides = normalizeSlidesClientSide(slides, lesson.optString("name", "Lesson"));
+            LessonSlideCache.save(this, lessonId, slides);
         } catch (Exception e) {
-            Toast.makeText(this, "Invalid lesson data", Toast.LENGTH_SHORT).show();
-            finish();
-            return;
+            JSONArray cached = LessonSlideCache.load(this, lessonId);
+            if (cached != null) {
+                slides = cached;
+            } else {
+                FeedbackHelper.showSnackbar(lessonSlidePager, "Invalid lesson data");
+                finish();
+            }
         }
+    }
 
+    private void setupPager() {
         LessonSlidePagerAdapter adapter = new LessonSlidePagerAdapter(slides);
         lessonSlidePager.setAdapter(adapter);
         lessonSlidePager.setOffscreenPageLimit(1);
@@ -93,18 +129,7 @@ public class LessonActivity extends LogoutAppCompatActivity {
             }
         });
 
-        lessonPrevButton.setOnClickListener(v -> goToSlide(slideIndex - 1));
-        lessonNextButton.setOnClickListener(v -> {
-            if (slideIndex >= slides.length() - 1) {
-                openActivity();
-            } else {
-                goToSlide(slideIndex + 1);
-            }
-        });
-        lessonContinueActivityButton.setVisibility(View.GONE);
-
         buildDotIndicator();
-
         if (slides.length() == 0) {
             lessonSwipeHint.setText(R.string.lesson_no_content);
             lessonNextButton.setEnabled(false);
@@ -114,7 +139,6 @@ public class LessonActivity extends LogoutAppCompatActivity {
         }
     }
 
-    /** Fallback when API has not yet normalized slides (older cache). */
     private JSONArray normalizeSlidesClientSide(JSONArray raw, String lessonName) {
         if (raw.length() == 0) {
             return raw;
@@ -139,11 +163,99 @@ public class LessonActivity extends LogoutAppCompatActivity {
                 row.put("emoji", emojis[i % emojis.length]);
                 row.put("title", slide.optString("title", lessonName + " — Part " + (i + 1)));
                 row.put("content", slide.optString("content", ""));
+                if (slide.has("micro_check")) {
+                    row.put("micro_check", slide.getJSONObject("micro_check"));
+                }
                 out.put(row);
             } catch (Exception ignored) {
             }
         }
         return out;
+    }
+
+    private void attemptAdvance() {
+        if (slideIndex >= slides.length() - 1) {
+            openActivity();
+            return;
+        }
+        if (needsMicroCheck(slideIndex) && !microChecksPassed.contains(slideIndex)) {
+            FeedbackHelper.showSnackbar(lessonSlidePager, "Complete the quick check first");
+            bindMicroCheckForSlide(slideIndex);
+            return;
+        }
+        goToSlide(slideIndex + 1);
+    }
+
+    private boolean needsMicroCheck(int index) {
+        try {
+            JSONObject slide = slides.getJSONObject(index);
+            return slide.has("micro_check");
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    private void bindMicroCheckForSlide(int index) {
+        try {
+            JSONObject slide = slides.getJSONObject(index);
+            JSONObject check = slide.optJSONObject("micro_check");
+            if (check == null) {
+                microCheckCard.setVisibility(View.GONE);
+                return;
+            }
+            microCheckCard.setVisibility(View.VISIBLE);
+            microCheckQuestion.setText(check.optString("question", ""));
+            microCheckOptions.removeAllViews();
+            JSONArray options = check.optJSONArray("options");
+            if (options != null) {
+                for (int i = 0; i < options.length(); i++) {
+                    RadioButton rb = new RadioButton(this);
+                    rb.setText(options.getString(i));
+                    rb.setId(View.generateViewId());
+                    microCheckOptions.addView(rb);
+                }
+            }
+        } catch (Exception e) {
+            microCheckCard.setVisibility(View.GONE);
+        }
+    }
+
+    private void submitMicroCheck() {
+        int selectedId = microCheckOptions.getCheckedRadioButtonId();
+        if (selectedId == -1) {
+            FeedbackHelper.showSnackbar(lessonSlidePager, "Pick an option");
+            return;
+        }
+        RadioButton selected = findViewById(selectedId);
+        try {
+            JSONObject body = new JSONObject();
+            body.put("lesson_id", lessonId);
+            body.put("slide_step", slideIndex + 1);
+            body.put("selected", selected.getText().toString());
+
+            AuthenticatedJsonObjectRequest request = new AuthenticatedJsonObjectRequest(
+                    this,
+                    Request.Method.POST,
+                    ApiConfig.api("lesson-activities/micro-check"),
+                    body,
+                    response -> {
+                        boolean correct = response.optBoolean("correct", false);
+                        if (correct) {
+                            microChecksPassed.add(slideIndex);
+                            microCheckCard.setVisibility(View.GONE);
+                            FeedbackHelper.successHaptic(lessonSlidePager);
+                            FeedbackHelper.showSnackbar(lessonSlidePager, response.optString("message", "Nice!"));
+                        } else {
+                            FeedbackHelper.errorHaptic(lessonSlidePager);
+                            FeedbackHelper.showSnackbar(lessonSlidePager, response.optString("message", "Try again"));
+                        }
+                    },
+                    error -> FeedbackHelper.showSnackbar(lessonSlidePager, "Could not verify answer")
+            );
+            Volley.newRequestQueue(this).add(request);
+        } catch (Exception e) {
+            FeedbackHelper.showSnackbar(lessonSlidePager, "Error sending check");
+        }
     }
 
     private void buildDotIndicator() {
@@ -201,6 +313,10 @@ public class LessonActivity extends LogoutAppCompatActivity {
         int progress = (int) ((step / (float) total) * 100);
         animateProgress(progress);
         updateDotIndicator();
+        bindMicroCheckForSlide(slideIndex);
+        if (!needsMicroCheck(slideIndex) || microChecksPassed.contains(slideIndex)) {
+            microCheckCard.setVisibility(View.GONE);
+        }
     }
 
     private void animateProgress(int target) {
@@ -212,7 +328,6 @@ public class LessonActivity extends LogoutAppCompatActivity {
     }
 
     private void openActivity() {
-        Intent intent = ModuleFlowHelper.activityIntent(this, lesson, lessonIndex, moduleId, moduleName, subjectId);
-        startActivity(intent);
+        startActivity(ModuleFlowHelper.activityIntent(this, lesson, lessonIndex, moduleId, moduleName, subjectId));
     }
 }

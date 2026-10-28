@@ -32,7 +32,9 @@ public class LessonActivityActivity extends LogoutAppCompatActivity {
     private TextView questionText;
     private EditText answerInput;
     private MaterialButton submitButton;
+    private MaterialButton hintButton;
     private ProgressBar submitProgress;
+    private String activityHint;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,6 +49,7 @@ public class LessonActivityActivity extends LogoutAppCompatActivity {
         answerInput = findViewById(R.id.activityAnswerInput);
         submitButton = findViewById(R.id.activitySubmitButton);
         submitProgress = findViewById(R.id.activitySubmitProgress);
+        hintButton = findViewById(R.id.activityHintButton);
 
         try {
             lesson = new JSONObject(getIntent().getStringExtra(ModuleFlowHelper.EXTRA_LESSON));
@@ -85,6 +88,13 @@ public class LessonActivityActivity extends LogoutAppCompatActivity {
         String difficulty = activityItem.optString("difficulty", "novice");
         difficultyBadge.setText(getString(R.string.lesson_activity_difficulty, capitalize(difficulty)));
         questionText.setText(activityItem.optString("question", "Question"));
+        activityHint = activityItem.optString("hint", "");
+        if (hintButton != null) {
+            hintButton.setVisibility(activityHint.isEmpty() ? View.GONE : View.VISIBLE);
+            hintButton.setOnClickListener(v ->
+                    FeedbackHelper.showSnackbar(submitButton,
+                            getString(R.string.activity_hint_toast, activityHint)));
+        }
 
         submitButton.setOnClickListener(v -> submitNovice(answerInput.getText().toString().trim()));
         answerInput.setOnEditorActionListener((v, actionId, event) -> {
@@ -139,10 +149,19 @@ public class LessonActivityActivity extends LogoutAppCompatActivity {
                     setSubmitting(false);
                     boolean correct = response.optBoolean("correct", false);
                     if (correct) {
-                        Toast.makeText(this, R.string.lesson_correct, Toast.LENGTH_SHORT).show();
-                        refreshModuleLessonsAndAdvance();
+                        FeedbackHelper.successHaptic(submitButton);
+                        JSONObject celebration = response.optJSONObject("celebration");
+                        String title = celebration != null
+                                ? celebration.optString("title", getString(R.string.lesson_correct))
+                                : getString(R.string.lesson_correct);
+                        String celebrationBody = celebration != null
+                                ? celebration.optString("body", "")
+                                : "";
+                        FeedbackHelper.celebrate(this, title, celebrationBody, this::refreshModuleLessonsAndAdvance);
                     } else {
-                        Toast.makeText(this, response.optString("message", getString(R.string.lesson_incorrect)), Toast.LENGTH_LONG).show();
+                        FeedbackHelper.errorHaptic(submitButton);
+                        FeedbackHelper.showSnackbar(submitButton,
+                                response.optString("message", getString(R.string.lesson_incorrect)));
                         returnToLessonSlides();
                     }
                 },
