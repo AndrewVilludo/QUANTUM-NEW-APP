@@ -2,12 +2,9 @@ package com.example.quantumrealm;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
-
-import androidx.appcompat.app.AppCompatActivity;
 
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
@@ -16,7 +13,7 @@ import com.android.volley.toolbox.Volley;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-public class CourseActivity extends AppCompatActivity {
+public class CourseActivity extends LogoutAppCompatActivity {
 
     private LinearLayout moduleContainer;
     private TextView courseTitleTextView;
@@ -43,6 +40,39 @@ public class CourseActivity extends AppCompatActivity {
 
         // ✅ Use correct course_id in API call
         fetchModulesFromApi(courseId);
+        fetchSubjectProgress(courseId, courseName);
+    }
+
+    private void fetchSubjectProgress(int subjectId, String courseName) {
+        AuthenticatedJsonObjectRequest request = new AuthenticatedJsonObjectRequest(
+                this,
+                Request.Method.GET,
+                ApiConfig.api("subject-progress/" + subjectId),
+                null,
+                response -> {
+                    try {
+                        JSONObject data = response.getJSONObject("data");
+                        if (data.optBoolean("final_quiz_unlocked", false) && !data.optBoolean("final_quiz_passed", false)) {
+                            moduleContainer.addView(UiHelper.inflatePathCard(
+                                    this,
+                                    moduleContainer,
+                                    "Final subject quiz",
+                                    "All modules complete — take the comprehensive quiz",
+                                    "🏆",
+                                    false,
+                                    () -> {
+                                        Intent intent = new Intent(CourseActivity.this, SubjectFinalQuizActivity.class);
+                                        intent.putExtra("subject_id", subjectId);
+                                        startActivity(intent);
+                                    }
+                            ));
+                        }
+                    } catch (Exception ignored) {
+                    }
+                },
+                error -> { }
+        );
+        requestQueue.add(request);
     }
 
     private void fetchModulesFromApi(int courseId) {
@@ -60,16 +90,38 @@ public class CourseActivity extends AppCompatActivity {
 
                             String moduleName = module.getString("name");
                             int moduleId = module.getInt("id");
+                            boolean unlocked = module.optBoolean("is_unlocked", false);
+                            boolean completed = module.optBoolean("is_completed", false);
+                            boolean quizReady = module.optBoolean("module_quiz_ready", false);
+                            int yearId = getIntent().getIntExtra("year_id", 0);
+                            int index = moduleContainer.getChildCount();
 
-                            Button moduleButton = new Button(this);
-                            moduleButton.setText(moduleName);
+                            String subtitle = completed
+                                    ? getString(R.string.module_completed)
+                                    : getString(R.string.module_ready);
+                            moduleContainer.addView(UiHelper.inflatePathCard(
+                                    this,
+                                    moduleContainer,
+                                    moduleName,
+                                    subtitle,
+                                    UiHelper.emojiForIndex(index + 1),
+                                    !unlocked,
+                                    completed,
+                                    () -> openModuleActivity(moduleId, moduleName, yearId)
+                            ));
 
-                            moduleButton.setOnClickListener(v -> {
-                                int yearId = getIntent().getIntExtra("year_id", 0); // optional
-                                openModuleActivity(moduleId, moduleName, yearId);
-                            });
-
-                            moduleContainer.addView(moduleButton);
+                            if (quizReady && unlocked) {
+                                moduleContainer.addView(UiHelper.inflatePathCard(
+                                        this,
+                                        moduleContainer,
+                                        getString(R.string.module_quiz_title, moduleName),
+                                        getString(R.string.module_quiz_subtitle),
+                                        "📝",
+                                        false,
+                                        false,
+                                        () -> openModuleQuiz(moduleId, moduleName)
+                                ));
+                            }
                         }
 
                     } catch (Exception e) {
@@ -93,6 +145,11 @@ public class CourseActivity extends AppCompatActivity {
         intent.putExtra("year_id", yearId);
         intent.putExtra("subject_id", getIntent().getIntExtra("course_id", 0));
         startActivity(intent);
+    }
+
+    private void openModuleQuiz(int moduleId, String moduleName) {
+        int subjectId = getIntent().getIntExtra("course_id", 0);
+        startActivity(ModuleFlowHelper.moduleQuizIntent(this, moduleId, moduleName, subjectId));
     }
 
 }

@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/pathCardRoot"
+    style="@style/Widget.QuantumRealm.Card"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="@dimen/game_card_margin"
+    android:clickable="true"
+    android:focusable="true"
+    app:rippleColor="@color/game_accent_soft">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:padding="16dp">
+
+        <TextView
+            android:id="@+id/pathEmoji"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:gravity="center"
+            android:text="📘"
+            android:textSize="22sp" />
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/pathTitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textAppearance="@style/TextAppearance.QuantumRealm.Title"
+                android:textSize="18sp"
+                tools:text="Introduction to Computing" />
+
+            <TextView
+                android:id="@+id/pathSubtitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="Tap to continue your quest"
+                android:textAppearance="@style/TextAppearance.QuantumRealm.Subtitle" />
+        </LinearLayout>
+
+        <ImageView
+            android:id="@+id/pathCompleteIcon"
+            android:layout_width="28dp"
+            android:layout_height="28dp"
+            android:contentDescription="@string/module_completed"
+            android:src="@drawable/ic_module_complete"
+            android:visibility="gone" />
+
+        <ImageView
+            android:id="@+id/pathLockIcon"
+            android:layout_width="28dp"
+            android:layout_height="28dp"
+            android:contentDescription="@string/locked_level"
+            android:src="@drawable/block"
+            android:visibility="gone" />
+    </LinearLayout>
+</com.google.android.material.card.MaterialCardView>

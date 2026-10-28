@@ -1,6 +1,9 @@
 . "$PSScriptRoot\emulator.config.ps1"
 
 $env:JAVA_HOME = $JavaHome
+if (-not $env:GRADLE_USER_HOME) {
+    $env:GRADLE_USER_HOME = Join-Path $env:USERPROFILE ".gradle"
+}
 Set-Location $PSScriptRoot
 
 $adb = Join-Path $AndroidSdkRoot "platform-tools\adb.exe"

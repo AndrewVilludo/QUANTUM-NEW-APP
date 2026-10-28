@@ -1,22 +1,83 @@
-<!-- activity_lesson.xml -->
+<?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@drawable/bg_game_screen"
     android:orientation="vertical"
-    android:padding="16dp">
+    android:padding="@dimen/game_screen_padding">
 
     <TextView
         android:id="@+id/lessonTitleTextView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Lesson Title"
-        android:textSize="18sp"
-        android:textColor="@android:color/black"
-        android:layout_marginBottom="16dp" />
-
-    <LinearLayout
-        android:id="@+id/lessonContainer"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical" />
+        android:textAppearance="@style/TextAppearance.QuantumRealm.Hero"
+        android:textSize="22sp" />
+
+    <TextView
+        android:id="@+id/lessonSlideProgress"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="6dp"
+        android:layout_marginBottom="12dp"
+        android:textAppearance="@style/TextAppearance.QuantumRealm.Subtitle" />
+
+    <com.google.android.material.card.MaterialCardView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        app:cardBackgroundColor="@color/game_surface"
+        app:cardCornerRadius="@dimen/game_card_radius">
+
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:padding="20dp">
+
+            <TextView
+                android:id="@+id/lessonSlideContent"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:lineSpacingExtra="4dp"
+                android:textAppearance="@style/TextAppearance.QuantumRealm.Title"
+                android:textColor="@color/game_text_primary"
+                android:textSize="16sp" />
+        </ScrollView>
+    </com.google.android.material.card.MaterialCardView>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:gravity="center"
+        android:orientation="horizontal">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/lessonPrevButton"
+            style="@style/Widget.QuantumRealm.Button.Secondary"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="8dp"
+            android:layout_weight="1"
+            android:text="Previous" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/lessonNextButton"
+            style="@style/Widget.QuantumRealm.Button.Primary"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_weight="1"
+            android:text="Next" />
+    </LinearLayout>
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/lessonContinueActivityButton"
+        style="@style/Widget.QuantumRealm.Button.Success"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:text="Continue to activity"
+        android:visibility="gone" />
+
 </LinearLayout>

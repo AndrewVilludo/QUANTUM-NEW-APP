@@ -1,124 +1,98 @@
 package com.example.quantumrealm;
 
 import android.content.Intent;
-import android.graphics.Color;
 import android.os.Bundle;
-import android.util.Log;
-import android.widget.Button;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.appcompat.app.AppCompatActivity;
-
 import com.android.volley.Request;
-import com.android.volley.RequestQueue;
-import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-public class ModuleActivity extends AppCompatActivity {
-
-    private LinearLayout moduleContainer;
-    private TextView moduleTitleTextView;
-
-    private int moduleId;
-    private String moduleName;
-    private RequestQueue requestQueue;
+public class ModuleActivity extends LogoutAppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_module);
 
-        moduleContainer = findViewById(R.id.moduleContainer);
-        moduleTitleTextView = findViewById(R.id.moduleTitleTextView);
+        TextView moduleTitleTextView = findViewById(R.id.moduleTitleTextView);
+        int moduleId = getIntent().getIntExtra("course_id", -1);
+        String moduleName = getIntent().getStringExtra("course_name");
+        int subjectId = getIntent().getIntExtra("subject_id", -1);
 
-        requestQueue = Volley.newRequestQueue(this);
-
-        moduleId = getIntent().getIntExtra("course_id", -1);
-        moduleName = getIntent().getStringExtra("course_name");
-
-        Log.d("ModuleActivity", "moduleId: " + moduleId);
-
-        if (moduleId == -1) {
-            Toast.makeText(this, "Invalid module ID", Toast.LENGTH_SHORT).show();
+        if (moduleId == -1 || subjectId == -1) {
+            Toast.makeText(this, "Invalid module", Toast.LENGTH_SHORT).show();
             finish();
             return;
         }
 
         moduleTitleTextView.setText(moduleName);
-        fetchLessonsFromApi(moduleId);
+        loadModuleProgress(moduleId, moduleName, subjectId);
     }
 
-    private void fetchLessonsFromApi(int moduleId) {
-        String url = ApiConfig.api("module-lessons/" + moduleId);
+    private void loadModuleProgress(int moduleId, String moduleName, int subjectId) {
+        String url = ApiConfig.api("module-progress/" + moduleId);
 
-        JsonObjectRequest request = new JsonObjectRequest(
-                Request.Method.GET, url, null,
+        AuthenticatedJsonObjectRequest request = new AuthenticatedJsonObjectRequest(
+                this,
+                Request.Method.GET,
+                url,
+                null,
                 response -> {
                     try {
-                        JSONArray lessons = response.getJSONArray("data");
-
-                        if (lessons.length() == 0) {
-                            Toast.makeText(this, "No lessons found for this module.", Toast.LENGTH_SHORT).show();
+                        if (!response.optBoolean("success", false)) {
+                            Toast.makeText(this, response.optString("message", "Module locked"), Toast.LENGTH_LONG).show();
+                            finish();
                             return;
                         }
 
-                        for (int i = 0; i < lessons.length(); i++) {
-                            JSONObject lesson = lessons.getJSONObject(i);
-
-                            String lessonName = lesson.getString("name");
-                            int lessonId = lesson.getInt("id");
-
-                            TextView lessonNameView = new TextView(this);
-                            lessonNameView.setText(lessonName);
-                            lessonNameView.setTextSize(18);
-                            lessonNameView.setTextColor(Color.BLACK);
-                            lessonNameView.setPadding(16, 24, 16, 8);
-                            moduleContainer.addView(lessonNameView);
-
-                            Button noviceButton = new Button(this);
-                            noviceButton.setText("Novice");
-                            noviceButton.setBackgroundColor(Color.parseColor("#4CAF50"));
-                            noviceButton.setTextColor(Color.WHITE);
-                            noviceButton.setOnClickListener(v ->
-                                    openLessonActivity(moduleId, lessonName));
-                            moduleContainer.addView(noviceButton);
-
-                            Button quizButton = new Button(this);
-                            quizButton.setText("Quiz");
-                            quizButton.setBackgroundColor(Color.parseColor("#2196F3"));
-                            quizButton.setTextColor(Color.WHITE);
-                            quizButton.setOnClickListener(v -> openQuizActivity(lessonId));
-                            moduleContainer.addView(quizButton);
+                        JSONArray lessons = response.getJSONArray("data");
+                        if (lessons.length() == 0) {
+                            Toast.makeText(this, "No lessons in this module.", Toast.LENGTH_SHORT).show();
+                            finish();
+                            return;
                         }
+
+                        JSONObject moduleMeta = response.optJSONObject("module");
+                        if (response.isNull("current_lesson_index")) {
+                            boolean quizReady = moduleMeta != null && moduleMeta.optBoolean("module_quiz_ready", false);
+                            if (quizReady) {
+                                startActivity(ModuleFlowHelper.moduleQuizIntent(this, moduleId, moduleName, subjectId));
+                                finish();
+                                return;
+                            }
+                            Toast.makeText(this, "Module complete! Great work.", Toast.LENGTH_LONG).show();
+                            ModuleFlowHelper.backToCourse(this, subjectId);
+                            finish();
+                            return;
+                        }
+
+                        int currentIndex = response.optInt("current_lesson_index", 0);
+                        JSONObject lesson = lessons.getJSONObject(currentIndex);
+                        if (!lesson.optBoolean("can_access", false)) {
+                            Toast.makeText(this, "This lesson is locked.", Toast.LENGTH_LONG).show();
+                            finish();
+                            return;
+                        }
+
+                        Intent intent = ModuleFlowHelper.slideshowIntent(
+                                this, lesson, currentIndex, moduleId, moduleName, subjectId);
+                        startActivity(intent);
+                        finish();
                     } catch (Exception e) {
-                        Toast.makeText(this, "Error parsing lessons: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-                        e.printStackTrace();
+                        Toast.makeText(this, "Error loading module lessons", Toast.LENGTH_SHORT).show();
+                        finish();
                     }
                 },
                 error -> {
-                    Toast.makeText(this, "Failed to fetch lessons: " + error.toString(), Toast.LENGTH_LONG).show();
-                    error.printStackTrace();
+                    Toast.makeText(this, "Failed to load module progress", Toast.LENGTH_LONG).show();
+                    finish();
                 }
         );
 
-        requestQueue.add(request);
-    }
-
-    private void openLessonActivity(int moduleId, String moduleName) {
-        Intent intent = new Intent(this, LessonActivity.class);
-        intent.putExtra("module_id", moduleId);
-        intent.putExtra("module_name", moduleName);
-        startActivity(intent);
-    }
-
-    private void openQuizActivity(int lessonId) {
-        Intent intent = new Intent(this, QuizActivity.class);
-        intent.putExtra("lesson_id", lessonId);
-        startActivity(intent);
+        Volley.newRequestQueue(this).add(request);
     }
 }

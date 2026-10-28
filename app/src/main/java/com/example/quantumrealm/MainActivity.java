@@ -1,8 +1,9 @@
 package com.example.quantumrealm;
 
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.text.method.PasswordTransformationMethod;
 import android.util.Log;
 import android.util.Patterns;
@@ -33,12 +34,16 @@ public class MainActivity extends AppCompatActivity {
     private RequestQueue requestQueue;
     private static final String LOGIN_URL = ApiConfig.api("login");
 
-    private static final String PREFS_NAME = "APP_PREFS";
-    private static final String TOKEN_KEY = "auth_token";
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        if (AuthHelper.isLoggedIn(this)) {
+            startActivity(new Intent(this, StudyJourney.class));
+            finish();
+            return;
+        }
+
         setContentView(R.layout.activity_main);
 
         loginEmail = findViewById(R.id.login_email);
@@ -94,7 +99,7 @@ public class MainActivity extends AppCompatActivity {
                         try {
                             if (response.has("token")) {
                                 String token = response.getString("token");
-                                saveAuthToken(token);
+                                AuthHelper.saveToken(MainActivity.this, token);
 
                                 runOnUiThread(() -> {
                                     Toast.makeText(MainActivity.this, "Login successful", Toast.LENGTH_SHORT).show();
@@ -125,11 +130,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    private void saveAuthToken(String token) {
-        SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
-        prefs.edit().putString(TOKEN_KEY, token).apply();
-    }
-
     private void showForgotPasswordDialog() {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Reset Password");
@@ -155,5 +155,26 @@ public class MainActivity extends AppCompatActivity {
 
     private void sendPasswordResetEmail(String email) {
         Toast.makeText(MainActivity.this, "Password reset request sent", Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.auth_menu, menu);
+        Music.bindMuteMenuItem(this, menu.findItem(R.id.action_mute_music));
+        return true;
+    }
+
+    @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        Music.bindMuteMenuItem(this, menu.findItem(R.id.action_mute_music));
+        return super.onPrepareOptionsMenu(menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (Music.handleMuteMenuItem(this, item)) {
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 }

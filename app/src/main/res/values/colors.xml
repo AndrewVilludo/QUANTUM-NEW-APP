@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- Legacy (keep for compatibility) -->
     <color name="purple_200">#FFBB86FC</color>
     <color name="purple_500">#FF6200EE</color>
     <color name="purple_700">#FF3700B3</color>
@@ -9,4 +10,24 @@
     <color name="white">#FFFFFFFF</color>
     <color name="border_color">#FF03DAC5</color>
 
+    <!-- Quantum Realm game palette -->
+    <color name="game_bg_dark">#0B1020</color>
+    <color name="game_bg_mid">#141B2D</color>
+    <color name="game_surface">#1E293B</color>
+    <color name="game_surface_elevated">#243047</color>
+    <color name="game_primary">#6366F1</color>
+    <color name="game_primary_dark">#4F46E5</color>
+    <color name="game_accent">#22D3EE</color>
+    <color name="game_accent_soft">#3322D3EE</color>
+    <color name="game_success">#22C55E</color>
+    <color name="game_success_soft">#3322C55E</color>
+    <color name="game_error">#EF4444</color>
+    <color name="game_error_soft">#33EF4444</color>
+    <color name="game_warning">#F59E0B</color>
+    <color name="game_text_primary">#F8FAFC</color>
+    <color name="game_text_secondary">#94A3B8</color>
+    <color name="game_text_muted">#64748B</color>
+    <color name="game_locked">#475569</color>
+    <color name="game_stroke">#334155</color>
+    <color name="game_xp_gold">#FBBF24</color>
 </resources>

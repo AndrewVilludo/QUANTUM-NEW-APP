@@ -8,8 +8,6 @@ import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import androidx.appcompat.app.AppCompatActivity;
-
 import com.airbnb.lottie.LottieAnimationView;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
@@ -22,7 +20,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-public class Journey extends AppCompatActivity {
+public class Journey extends LogoutAppCompatActivity {
 
     private LinearLayout buttonContainer;
     private static final String API_URL = ApiConfig.api("years");

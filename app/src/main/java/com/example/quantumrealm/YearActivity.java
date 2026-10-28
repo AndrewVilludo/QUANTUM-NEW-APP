@@ -2,12 +2,9 @@ package com.example.quantumrealm;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
-
-import androidx.appcompat.app.AppCompatActivity;
 
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
@@ -17,7 +14,7 @@ import com.android.volley.toolbox.Volley;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-public class YearActivity extends AppCompatActivity {
+public class YearActivity extends LogoutAppCompatActivity {
 
     private LinearLayout courseContainer;
     private TextView yearTitleTextView;
@@ -74,15 +71,16 @@ public class YearActivity extends AppCompatActivity {
                                 String courseName = course.getString("name");
                                 int courseId = course.getInt("id");
 
-                                // Create a button for each course
-                                Button courseButton = new Button(this);
-                                courseButton.setText(courseName);
-
-                                // Set up the button click listener to open the CourseActivity
-                                courseButton.setOnClickListener(v -> openCourseActivity(courseId, courseName));
-
-                                // Add the button to the layout
-                                courseContainer.addView(courseButton);
+                                int index = courseContainer.getChildCount();
+                                courseContainer.addView(UiHelper.inflatePathCard(
+                                        this,
+                                        courseContainer,
+                                        courseName,
+                                        "Subject quest · tap to open",
+                                        UiHelper.emojiForIndex(index),
+                                        false,
+                                        () -> openCourseActivity(courseId, courseName)
+                                ));
                             }
                         }
 

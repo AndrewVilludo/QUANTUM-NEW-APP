@@ -2,6 +2,8 @@ package com.example.quantumrealm;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.text.method.PasswordTransformationMethod;
 import android.util.Patterns;
 import android.widget.ArrayAdapter;
@@ -131,6 +133,27 @@ public class Register extends AppCompatActivity {
         } catch (Exception e) {
             Toast.makeText(Register.this, "Error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
         }
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.auth_menu, menu);
+        Music.bindMuteMenuItem(this, menu.findItem(R.id.action_mute_music));
+        return true;
+    }
+
+    @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        Music.bindMuteMenuItem(this, menu.findItem(R.id.action_mute_music));
+        return super.onPrepareOptionsMenu(menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (Music.handleMuteMenuItem(this, item)) {
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 
 }

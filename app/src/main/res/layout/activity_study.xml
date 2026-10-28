@@ -37,39 +37,36 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <Button
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/quit"
+        style="@style/Widget.QuantumRealm.Button.Secondary"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
         android:layout_marginTop="196dp"
-        android:background="@drawable/custom_trans"
-        android:text="quit the game"
-        android:textColor="@color/white"
+        android:text="Quit"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <Button
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/yes_tart"
+        style="@style/Widget.QuantumRealm.Button.Primary"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="196dp"
         android:layout_marginEnd="16dp"
-        android:background="@drawable/custom_trans"
         android:text="Yes, let's go!"
-        android:textColor="@color/white"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <Button
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/next"
+        style="@style/Widget.QuantumRealm.Button.Primary"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="144dp"
         android:layout_marginTop="196dp"
-        android:background="@drawable/custom_trans"
         android:text="Next"
-        android:textColor="@color/white"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
@@ -92,16 +89,13 @@
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/start"
+            style="@style/Widget.QuantumRealm.Button.Success"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:clickable="true"
-            android:focusable="true"
-            android:gravity="center"
-            android:background="@drawable/custom_trans"
             android:layout_gravity="center"
-            android:text="Start the Quiz!"
-            android:textColor="@color/white"
-            android:textSize="20sp"
+            android:gravity="center"
+            android:text="Enter the Galaxy"
+            android:textSize="18sp"
             tools:ignore="MissingClass" />
 
     </FrameLayout>

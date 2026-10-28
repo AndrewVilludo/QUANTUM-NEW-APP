@@ -3,15 +3,16 @@ package com.example.quantumrealm;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.CountDownTimer;
-import android.util.Log;
+import android.os.Handler;
+import android.os.Looper;
 import android.widget.Button;
+import android.widget.ProgressBar;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AlertDialog;
-import androidx.appcompat.app.AppCompatActivity;
 
 import com.android.volley.Request;
 import com.android.volley.toolbox.JsonObjectRequest;
@@ -23,9 +24,10 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.List;
 
-public class QuizActivity extends AppCompatActivity {
+public class QuizActivity extends LogoutAppCompatActivity {
 
-    private TextView questionText, timerText, scoreText;
+    private TextView questionText, timerText, scoreText, quizProgressText;
+    private ProgressBar quizProgressBar;
     private RadioGroup optionsGroup;
     private RadioButton optionA, optionB, optionC, optionD;
     private Button nextButton;
@@ -36,7 +38,8 @@ public class QuizActivity extends AppCompatActivity {
     private List<String> wrongAnswers = new ArrayList<>();
 
     private CountDownTimer countDownTimer;
-    private static final long TIMER_DURATION = 10000; // 10 seconds per question
+    private static final long TIMER_DURATION = 10000;
+    private final Handler handler = new Handler(Looper.getMainLooper());
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,6 +49,8 @@ public class QuizActivity extends AppCompatActivity {
         questionText = findViewById(R.id.questionText);
         timerText = findViewById(R.id.timerText);
         scoreText = findViewById(R.id.scoreText);
+        quizProgressText = findViewById(R.id.quizProgressText);
+        quizProgressBar = findViewById(R.id.quizProgressBar);
         optionsGroup = findViewById(R.id.optionsGroup);
         optionA = findViewById(R.id.optionA);
         optionB = findViewById(R.id.optionB);
@@ -66,7 +71,6 @@ public class QuizActivity extends AppCompatActivity {
     }
 
     private void fetchQuizData(int lessonId) {
-        // Correct the URL format
         String url = ApiConfig.api("lesson-quizzes/" + lessonId);
 
         JsonObjectRequest request = new JsonObjectRequest(Request.Method.GET, url, null,
@@ -74,7 +78,6 @@ public class QuizActivity extends AppCompatActivity {
                     try {
                         JSONArray jsonArray = response.getJSONArray("data");
 
-                        // Parse the quiz data into Question objects
                         for (int i = 0; i < jsonArray.length(); i++) {
                             JSONObject obj = jsonArray.getJSONObject(i);
                             Question q = new Question(
@@ -90,7 +93,6 @@ public class QuizActivity extends AppCompatActivity {
                             questionList.add(q);
                         }
 
-                        // If questions are available, show the next question
                         if (!questionList.isEmpty()) {
                             showNextQuestion();
                         } else {
@@ -111,9 +113,10 @@ public class QuizActivity extends AppCompatActivity {
         Volley.newRequestQueue(this).add(request);
     }
 
-
     private void showNextQuestion() {
         if (countDownTimer != null) countDownTimer.cancel();
+        resetOptionStyles();
+        nextButton.setEnabled(true);
 
         if (currentQuestionIndex < questionList.size()) {
             Question question = questionList.get(currentQuestionIndex);
@@ -123,17 +126,17 @@ public class QuizActivity extends AppCompatActivity {
             optionC.setText(question.getAnswer3());
             optionD.setText(question.getAnswer4());
             optionsGroup.clearCheck();
-            scoreText.setText("Score: " + score);
+            updateProgressUi();
 
             countDownTimer = new CountDownTimer(TIMER_DURATION, 1000) {
                 @Override
                 public void onTick(long millisUntilFinished) {
-                    timerText.setText("Time Left: " + millisUntilFinished / 1000 + "s");
+                    timerText.setText("⏱ " + millisUntilFinished / 1000 + "s");
                 }
 
                 @Override
                 public void onFinish() {
-                    timerText.setText("Time's Up!");
+                    timerText.setText("Time's up!");
                     wrongAnswers.add("Q: " + question.getQuestion() +
                             "\nYour Answer: No answer (Timeout)" +
                             "\nCorrect: " + question.getCorrectAnswerText());
@@ -147,6 +150,21 @@ public class QuizActivity extends AppCompatActivity {
         }
     }
 
+    private void updateProgressUi() {
+        int total = questionList.size();
+        int displayIndex = Math.min(currentQuestionIndex + 1, total);
+        quizProgressText.setText(getString(R.string.quiz_progress, displayIndex, total));
+        quizProgressBar.setProgress(total == 0 ? 0 : (displayIndex * 100 / total));
+        scoreText.setText("XP: " + score);
+    }
+
+    private void resetOptionStyles() {
+        optionA.setBackgroundResource(R.drawable.quiz_option_background);
+        optionB.setBackgroundResource(R.drawable.quiz_option_background);
+        optionC.setBackgroundResource(R.drawable.quiz_option_background);
+        optionD.setBackgroundResource(R.drawable.quiz_option_background);
+    }
+
     private void checkAnswer() {
         if (countDownTimer != null) countDownTimer.cancel();
 
@@ -154,39 +172,69 @@ public class QuizActivity extends AppCompatActivity {
         int selectedId = optionsGroup.getCheckedRadioButtonId();
         String selectedAnswer = "";
 
+        RadioButton selectedOption = null;
         if (selectedId != -1) {
-            RadioButton selectedOption = findViewById(selectedId);
+            selectedOption = findViewById(selectedId);
             selectedAnswer = selectedOption.getText().toString();
         }
 
-        if (selectedAnswer.equals(current.getCorrectAnswerText())) {
+        if (selectedAnswer.isEmpty()) {
+            Toast.makeText(this, "Pick an answer first", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        nextButton.setEnabled(false);
+        boolean correct = selectedAnswer.equals(current.getCorrectAnswerText());
+        RadioButton correctButton = findButtonForAnswer(current.getCorrectAnswerText());
+
+        if (correct) {
             score++;
+            if (selectedOption != null) {
+                selectedOption.setBackgroundResource(R.drawable.quiz_option_correct);
+            }
+            Toast.makeText(this, "Correct! +1 XP", Toast.LENGTH_SHORT).show();
         } else {
             wrongAnswers.add("Q: " + current.getQuestion() + "\nYour Answer: " +
                     selectedAnswer + "\nCorrect: " + current.getCorrectAnswerText());
+            if (selectedOption != null) {
+                selectedOption.setBackgroundResource(R.drawable.quiz_option_wrong);
+            }
+            if (correctButton != null) {
+                correctButton.setBackgroundResource(R.drawable.quiz_option_correct);
+            }
         }
 
+        updateProgressUi();
         currentQuestionIndex++;
-        showNextQuestion();
+
+        handler.postDelayed(this::showNextQuestion, 700);
+    }
+
+    private RadioButton findButtonForAnswer(String answerText) {
+        if (optionA.getText().toString().equals(answerText)) return optionA;
+        if (optionB.getText().toString().equals(answerText)) return optionB;
+        if (optionC.getText().toString().equals(answerText)) return optionC;
+        if (optionD.getText().toString().equals(answerText)) return optionD;
+        return null;
     }
 
     private void showFinalScore() {
         StringBuilder result = new StringBuilder();
-        result.append("Final Score: ").append(score).append("/").append(questionList.size()).append("\n\n");
+        result.append("Final XP: ").append(score).append("/").append(questionList.size()).append("\n\n");
 
         if (!wrongAnswers.isEmpty()) {
-            result.append("Incorrect Answers:\n");
+            result.append("Review these misses:\n");
             for (String mistake : wrongAnswers) {
                 result.append(mistake).append("\n\n");
             }
         } else {
-            result.append("Perfect Score! 🎉");
+            result.append("Perfect run! 🎉");
         }
 
         new AlertDialog.Builder(this)
-                .setTitle("Quiz Finished")
+                .setTitle("Quest complete")
                 .setMessage(result.toString())
-                .setPositiveButton("OK", (dialog, which) -> {
+                .setPositiveButton("Back to map", (dialog, which) -> {
                     Intent intent = new Intent(QuizActivity.this, Journey.class);
                     startActivity(intent);
                     finish();

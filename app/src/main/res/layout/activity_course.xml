@@ -1,20 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@drawable/bg_game_screen"
     android:orientation="vertical"
-    android:padding="16dp">
+    android:padding="@dimen/game_screen_padding">
 
     <TextView
         android:id="@+id/courseTitleTextView"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textAlignment="center"
-        android:textSize="24sp"
-        android:text="Course Name" />
+        android:textAlignment="viewStart"
+        android:textAppearance="@style/TextAppearance.QuantumRealm.Hero"
+        android:textSize="24sp" />
 
-    <LinearLayout
-        android:id="@+id/moduleContainer"
+    <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical" />
+        android:layout_marginTop="6dp"
+        android:layout_marginBottom="16dp"
+        android:text="Complete modules in order to unlock the next"
+        android:textAppearance="@style/TextAppearance.QuantumRealm.Subtitle" />
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <LinearLayout
+            android:id="@+id/moduleContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical" />
+    </ScrollView>
 </LinearLayout>

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="game_screen_padding">20dp</dimen>
+    <dimen name="game_card_radius">16dp</dimen>
+    <dimen name="game_button_radius">14dp</dimen>
+    <dimen name="game_card_margin">12dp</dimen>
+    <dimen name="game_title_size">26sp</dimen>
+    <dimen name="game_subtitle_size">14sp</dimen>
+    <dimen name="game_body_size">16sp</dimen>
+</resources>

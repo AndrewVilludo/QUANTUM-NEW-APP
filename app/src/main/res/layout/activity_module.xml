@@ -1,31 +1,35 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.widget.ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:background="@drawable/bg_game_screen"
+    android:fillViewport="true">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="16dp">
+        android:padding="@dimen/game_screen_padding">
 
-        <!-- Course Title TextView -->
         <TextView
             android:id="@+id/moduleTitleTextView"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Course Name"
-            android:textSize="20sp"
-            android:textStyle="bold"
-            android:layout_marginBottom="16dp"/>
+            android:textAppearance="@style/TextAppearance.QuantumRealm.Hero"
+            android:textSize="22sp" />
 
-        <!-- Container for Module Buttons -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:layout_marginBottom="16dp"
+            android:text="Loading your lesson path…"
+            android:textAppearance="@style/TextAppearance.QuantumRealm.Subtitle" />
+
         <LinearLayout
             android:id="@+id/moduleContainer"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:scrollbars="vertical"/>
-
+            android:orientation="vertical" />
     </LinearLayout>
-</android.widget.ScrollView>
+</ScrollView>

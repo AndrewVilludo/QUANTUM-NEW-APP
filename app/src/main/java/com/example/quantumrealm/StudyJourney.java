@@ -6,14 +6,13 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
-import androidx.appcompat.app.AppCompatActivity;
 import com.airbnb.lottie.LottieAnimationView;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 
-public class StudyJourney extends AppCompatActivity {
+public class StudyJourney extends LogoutAppCompatActivity {
 
     private JSONObject journeyData;
     private int currentStep = 0;

@@ -1,3 +1,30 @@
 <resources>
-    <string name="app_name">QuantumRealm</string>
+    <string name="app_name">Quantum Realm</string>
+    <string name="locked_level">Level locked</string>
+    <string name="module_completed">Module completed</string>
+    <string name="module_ready">Tap to start lessons</string>
+    <string name="module_locked_hint">Complete the previous module first</string>
+    <string name="module_completed_toast">You already finished this module.</string>
+    <string name="module_quiz_title">Module quiz: %1$s</string>
+    <string name="module_quiz_subtitle">15 questions — need 60% to pass</string>
+    <string name="journey_title">Learning Galaxy</string>
+    <string name="journey_subtitle">Pick a year to start your programming quest</string>
+    <string name="quiz_progress">Question %1$d of %2$d</string>
+    <string name="logout_confirm_title">Log out?</string>
+    <string name="logout_confirm_message">You will need to sign in again to continue your quest.</string>
+    <string name="logout_confirm_yes">Log out</string>
+    <string name="logout_confirm_no">Cancel</string>
+    <string name="music_mute">Mute music</string>
+    <string name="music_unmute">Unmute music</string>
+    <string name="profile_menu">Profile</string>
+    <string name="profile_title">My profile</string>
+    <string name="profile_quiz_scores_heading">Quiz scores</string>
+    <string name="profile_logout_button">Log out</string>
+    <string name="profile_load_failed">Could not load profile</string>
+    <string name="profile_no_scores">No quiz scores yet. Complete module quizzes to see results here.</string>
+    <string name="profile_subject_no_scores">No scores recorded for this subject yet.</string>
+    <string name="profile_final_quiz_label">Final subject quiz</string>
+    <string name="profile_score_format">Score: %1$d / %2$d (%3$d%%) — %4$s</string>
+    <string name="profile_quiz_passed">Passed</string>
+    <string name="profile_quiz_not_passed">Not passed</string>
 </resources>

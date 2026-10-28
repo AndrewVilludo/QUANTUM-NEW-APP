@@ -1,146 +1,108 @@
 package com.example.quantumrealm;
 
 import android.content.Intent;
-import android.graphics.Color;
 import android.os.Bundle;
-import android.text.TextUtils;
 import android.view.View;
-import android.widget.Button;
-import android.widget.EditText;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.appcompat.app.AppCompatActivity;
-
-import com.android.volley.Request;
-import com.android.volley.toolbox.JsonObjectRequest;
-import com.android.volley.toolbox.Volley;
+import com.google.android.material.button.MaterialButton;
 
 import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 
-public class LessonActivity extends AppCompatActivity {
+public class LessonActivity extends LogoutAppCompatActivity {
 
-    private LinearLayout lessonContainer;
     private TextView lessonTitleTextView;
+    private TextView lessonSlideProgress;
+    private TextView lessonSlideContent;
+    private MaterialButton lessonPrevButton;
+    private MaterialButton lessonNextButton;
+    private MaterialButton lessonContinueActivityButton;
 
-    private JSONArray activityArray;
+    private JSONArray slides = new JSONArray();
+    private int slideIndex = 0;
+
+    private JSONObject lesson;
+    private int lessonIndex;
+    private int moduleId;
+    private String moduleName;
+    private int subjectId;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_lesson);
 
-        lessonContainer = findViewById(R.id.lessonContainer);
         lessonTitleTextView = findViewById(R.id.lessonTitleTextView);
+        lessonSlideProgress = findViewById(R.id.lessonSlideProgress);
+        lessonSlideContent = findViewById(R.id.lessonSlideContent);
+        lessonPrevButton = findViewById(R.id.lessonPrevButton);
+        lessonNextButton = findViewById(R.id.lessonNextButton);
+        lessonContinueActivityButton = findViewById(R.id.lessonContinueActivityButton);
 
         Intent intent = getIntent();
-        int moduleId = intent.getIntExtra("module_id", -1);
-        String moduleName = intent.getStringExtra("module_name");
+        try {
+            lesson = new JSONObject(intent.getStringExtra(ModuleFlowHelper.EXTRA_LESSON));
+            lessonIndex = intent.getIntExtra(ModuleFlowHelper.EXTRA_LESSON_INDEX, 0);
+            moduleId = intent.getIntExtra(ModuleFlowHelper.EXTRA_MODULE_ID, -1);
+            moduleName = intent.getStringExtra(ModuleFlowHelper.EXTRA_MODULE_NAME);
+            subjectId = intent.getIntExtra(ModuleFlowHelper.EXTRA_SUBJECT_ID, -1);
 
-        lessonTitleTextView.setText(moduleName);
-
-        if (moduleId != -1) {
-            fetchLessonData(moduleId);
-        }
-    }
-
-    private void fetchLessonData(int moduleId) {
-        String url = ApiConfig.api("module-lessons/" + moduleId);
-
-        JsonObjectRequest request = new JsonObjectRequest(Request.Method.GET, url, null,
-                response -> {
-                    try {
-                        JSONArray dataArray = response.getJSONArray("data");
-                        if (dataArray.length() > 0) {
-                            JSONObject lessonObject = dataArray.getJSONObject(0);
-
-                            // Only fetch activities now (no content display as per your instruction)
-                            activityArray = lessonObject.getJSONArray("activity");
-
-                            // Display all questions directly
-                            displayQuestions();
-                        }
-                    } catch (JSONException e) {
-                        e.printStackTrace();
-                        Toast.makeText(this, "Error parsing lesson data", Toast.LENGTH_SHORT).show();
-                    }
-                },
-                error -> {
-                    error.printStackTrace();
-                    Toast.makeText(this, "Failed to fetch lesson data", Toast.LENGTH_SHORT).show();
-                });
-
-        Volley.newRequestQueue(this).add(request);
-    }
-
-    private void displayQuestions() {
-        lessonContainer.removeAllViews(); // Clear any previously displayed questions
-
-        boolean questionFound = false;  // To track if we find any questions
-
-        for (int i = 0; i < activityArray.length(); i++) {
-            try {
-                JSONObject activity = activityArray.getJSONObject(i);
-
-                // Create a TextView for the question
-                TextView questionText = new TextView(this);
-                questionText.setText("Q: " + activity.getString("question"));
-                questionText.setTextColor(Color.DKGRAY);
-                questionText.setPadding(20, 10, 20, 10);
-                lessonContainer.addView(questionText);
-
-                // Create an EditText for answer input
-                EditText answerInput = new EditText(this);
-                answerInput.setHint("Enter your answer here");
-                answerInput.setPadding(20, 10, 20, 10);
-                lessonContainer.addView(answerInput);
-
-                // Create a Submit button for the answer
-                Button submitButton = new Button(this);
-                submitButton.setText("Submit Answer");
-                submitButton.setBackgroundColor(Color.parseColor("#2196F3"));
-                submitButton.setTextColor(Color.WHITE);
-                submitButton.setPadding(20, 10, 20, 10);
-
-                submitButton.setOnClickListener(v -> {
-                    String userAnswer = answerInput.getText().toString().trim();
-                    if (TextUtils.isEmpty(userAnswer)) {
-                        Toast.makeText(this, "Please enter an answer", Toast.LENGTH_SHORT).show();
-                    } else {
-                        try {
-                            String correctAnswer = activity.getString("correct_answer");
-                            if (userAnswer.equalsIgnoreCase(correctAnswer)) {
-                                Toast.makeText(this, "Correct!", Toast.LENGTH_SHORT).show();
-                                Intent intent = new Intent(LessonActivity.this, SplashActivity.class);
-                                startActivity(intent);
-                            } else {
-                                Toast.makeText(this, "Incorrect! The correct answer is: " + correctAnswer, Toast.LENGTH_LONG).show();
-                            }
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                });
-
-                lessonContainer.addView(submitButton);
-
-                questionFound = true; // Mark that we've found at least one question
-
-            } catch (JSONException e) {
-                e.printStackTrace();
+            lessonTitleTextView.setText(lesson.optString("name", moduleName));
+            slides = lesson.optJSONArray("data");
+            if (slides == null) {
+                slides = new JSONArray();
             }
+        } catch (Exception e) {
+            Toast.makeText(this, "Invalid lesson data", Toast.LENGTH_SHORT).show();
+            finish();
+            return;
         }
 
-        // If no questions are found, display a message
-        if (!questionFound) {
-            TextView noQuestionText = new TextView(this);
-            noQuestionText.setText("No questions available.");
-            noQuestionText.setTextColor(Color.RED);
-            noQuestionText.setPadding(20, 10, 20, 10);
-            lessonContainer.addView(noQuestionText);
+        lessonPrevButton.setOnClickListener(v -> showSlide(slideIndex - 1));
+        lessonNextButton.setOnClickListener(v -> {
+            if (slideIndex >= slides.length() - 1) {
+                openActivity();
+            } else {
+                showSlide(slideIndex + 1);
+            }
+        });
+        lessonContinueActivityButton.setOnClickListener(v -> openActivity());
+
+        if (slides.length() == 0) {
+            lessonSlideContent.setText("No lesson content available yet.");
+            lessonContinueActivityButton.setVisibility(View.VISIBLE);
+            lessonNextButton.setEnabled(false);
+        } else {
+            showSlide(0);
         }
+    }
+
+    private void showSlide(int index) {
+        if (slides.length() == 0) {
+            return;
+        }
+        slideIndex = Math.max(0, Math.min(index, slides.length() - 1));
+
+        try {
+            JSONObject slide = slides.getJSONObject(slideIndex);
+            String raw = slide.optString("content", "");
+            lessonSlideContent.setText(raw.replace("**", "").replace("`", ""));
+        } catch (Exception e) {
+            lessonSlideContent.setText("");
+        }
+
+        lessonSlideProgress.setText("Slide " + (slideIndex + 1) + " of " + slides.length());
+        lessonPrevButton.setEnabled(slideIndex > 0);
+
+        boolean onLast = slideIndex >= slides.length() - 1;
+        lessonContinueActivityButton.setVisibility(onLast ? View.VISIBLE : View.GONE);
+        lessonNextButton.setText(onLast ? "Start activity" : "Next");
+    }
+
+    private void openActivity() {
+        Intent intent = ModuleFlowHelper.activityIntent(this, lesson, lessonIndex, moduleId, moduleName, subjectId);
+        startActivity(intent);
     }
 }

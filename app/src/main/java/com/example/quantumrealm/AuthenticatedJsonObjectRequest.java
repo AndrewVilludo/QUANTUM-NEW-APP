@@ -16,9 +16,6 @@ import java.util.Map;
  */
 public class AuthenticatedJsonObjectRequest extends JsonObjectRequest {
 
-    private static final String PREFS_NAME = "APP_PREFS";
-    private static final String TOKEN_KEY = "auth_token";
-
     private final Context context;
 
     public AuthenticatedJsonObjectRequest(
@@ -37,8 +34,7 @@ public class AuthenticatedJsonObjectRequest extends JsonObjectRequest {
     public Map<String, String> getHeaders() throws AuthFailureError {
         Map<String, String> headers = new HashMap<>();
         headers.put("Accept", "application/json");
-        String token = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-                .getString(TOKEN_KEY, null);
+        String token = AuthHelper.getToken(context);
         if (token != null && !token.isEmpty()) {
             headers.put("Authorization", "Bearer " + token);
         }
