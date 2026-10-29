@@ -14,6 +14,14 @@
     <string name="auth_hint_confirm_password">Confirm password</string>
     <string name="auth_hint_year_level">Year level</string>
     <string name="auth_forgot_password">Forgot password?</string>
+    <string name="auth_forgot_title">Reset password</string>
+    <string name="auth_forgot_subtitle">Enter your account email and we\u2019ll send a link to set a new password</string>
+    <string name="auth_forgot_button">Send reset link</string>
+    <string name="auth_forgot_success_title">Check your email</string>
+    <string name="auth_forgot_success_body">If an account exists for that address, we sent a reset link. Open it on this device or your computer to choose a new password.</string>
+    <string name="auth_forgot_mailhog_hint">Dev: open MailHog at http://10.0.2.2:8025 (emulator) to read the message.</string>
+    <string name="auth_forgot_error_generic">Could not send the reset link. Try again in a moment.</string>
+    <string name="auth_loading_forgot">Sending link\u2026</string>
     <string name="auth_back_to_login">Already have an account? Log in</string>
     <string name="auth_error_email_required">Enter your email address</string>
     <string name="auth_error_email_invalid">Enter a valid email address</string>
@@ -29,6 +37,9 @@
         <item>4th year</item>
     </string-array>
     <string name="auth_error_login_failed">Invalid email or password</string>
+    <string name="auth_error_server_unreachable">Cannot reach the server. Check your network and that the API is running (php artisan serve --host=0.0.0.0 --port=8000).</string>
+    <string name="auth_error_request_failed">Something went wrong (HTTP %1$d). Try again in a moment.</string>
+    <string name="auth_error_register_failed">Registration failed. Check your details and try again.</string>
     <string name="auth_loading_login">Signing in…</string>
     <string name="auth_loading_register">Creating account…</string>
     <string name="locked_level">Level locked</string>
@@ -64,6 +75,12 @@
     <string name="music_mute">Mute music</string>
     <string name="music_unmute">Unmute music</string>
     <string name="profile_menu">Profile</string>
+    <string name="nav_drawer_open">Open navigation menu</string>
+    <string name="nav_drawer_close">Close navigation menu</string>
+    <string name="nav_galaxy">Learning Galaxy</string>
+    <string name="nav_title_tiers">Title tiers</string>
+    <string name="nav_achievements">Achievements</string>
+    <string name="nav_header_subtitle">Your quest hub</string>
     <string name="profile_title">My profile</string>
     <string name="profile_quiz_scores_heading">Quiz scores</string>
     <string name="profile_logout_button">Log out</string>

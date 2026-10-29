@@ -35,6 +35,7 @@ public class TitleTiersActivity extends LogoutAppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_title_tiers);
+        setupAppDrawer();
 
         container = findViewById(R.id.titleTiersContainer);
         subtitle = findViewById(R.id.titleTiersSubtitle);
@@ -53,13 +54,6 @@ public class TitleTiersActivity extends LogoutAppCompatActivity {
         if (getSupportActionBar() != null) {
             getSupportActionBar().setTitle(R.string.title_tiers_page_title);
         }
-    }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.mute_only_menu, menu);
-        Music.bindMuteMenuItem(this, menu.findItem(R.id.action_mute_music));
-        return true;
     }
 
     private void loadFromApi() {

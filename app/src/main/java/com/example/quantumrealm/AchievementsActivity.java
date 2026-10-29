@@ -34,6 +34,7 @@ public class AchievementsActivity extends LogoutAppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_achievements);
+        setupAppDrawer();
 
         container = findViewById(R.id.achievementsContainer);
         subtitle = findViewById(R.id.achievementsSubtitle);
@@ -54,13 +55,6 @@ public class AchievementsActivity extends LogoutAppCompatActivity {
         if (getSupportActionBar() != null) {
             getSupportActionBar().setTitle(R.string.achievements_page_title);
         }
-    }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.mute_only_menu, menu);
-        Music.bindMuteMenuItem(this, menu.findItem(R.id.action_mute_music));
-        return true;
     }
 
     private void loadFromApi() {

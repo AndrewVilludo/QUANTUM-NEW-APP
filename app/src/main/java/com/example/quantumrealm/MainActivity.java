@@ -14,7 +14,6 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.android.volley.Request;
@@ -74,7 +73,12 @@ public class MainActivity extends AppCompatActivity {
         loginEmail.addTextChangedListener(clearErrorsWatcher);
         loginPassword.addTextChangedListener(clearErrorsWatcher);
 
-        forgotPasswordTextView.setOnClickListener(v -> showForgotPasswordDialog());
+        forgotPasswordTextView.setOnClickListener(v -> {
+            Intent intent = new Intent(MainActivity.this, ForgotPasswordActivity.class);
+            intent.putExtra(ForgotPasswordActivity.EXTRA_EMAIL, loginEmail.getText().toString().trim());
+            startActivity(intent);
+            overridePendingTransition(R.anim.auth_slide_in_right, R.anim.auth_slide_out_left);
+        });
 
         loginButton.setOnClickListener(v -> {
             String email = loginEmail.getText().toString().trim();
@@ -174,7 +178,14 @@ public class MainActivity extends AppCompatActivity {
                         Log.e("API_ERROR", "Request failed: " + error.toString());
                         runOnUiThread(() -> {
                             setLoginLoading(false);
-                            showFieldError(loginFormError, getString(R.string.auth_error_login_failed));
+                            showFieldError(
+                                    loginFormError,
+                                    VolleyErrorHelper.message(
+                                            MainActivity.this,
+                                            error,
+                                            R.string.auth_error_login_failed
+                                    )
+                            );
                         });
                     }
             );
@@ -185,33 +196,6 @@ public class MainActivity extends AppCompatActivity {
             setLoginLoading(false);
             showFieldError(loginFormError, "Error: " + e.getMessage());
         }
-    }
-
-    private void showForgotPasswordDialog() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("Reset Password");
-
-        final EditText input = new EditText(this);
-        input.setHint("Enter your registered email");
-        builder.setView(input);
-
-        builder.setPositiveButton("Send Email", (dialog, which) -> {
-            String email = input.getText().toString().trim();
-            if (email.isEmpty()) {
-                Toast.makeText(MainActivity.this, "Please enter your email", Toast.LENGTH_SHORT).show();
-            } else if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
-                Toast.makeText(MainActivity.this, "Please enter a valid email address", Toast.LENGTH_SHORT).show();
-            } else {
-                sendPasswordResetEmail(email);
-            }
-        });
-
-        builder.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
-        builder.show();
-    }
-
-    private void sendPasswordResetEmail(String email) {
-        Toast.makeText(MainActivity.this, "Password reset request sent", Toast.LENGTH_SHORT).show();
     }
 
     @Override

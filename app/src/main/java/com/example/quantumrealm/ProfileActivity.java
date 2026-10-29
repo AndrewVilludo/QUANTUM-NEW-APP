@@ -2,6 +2,7 @@ package com.example.quantumrealm;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.View;
@@ -26,6 +27,8 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 public class ProfileActivity extends LogoutAppCompatActivity {
+
+    private static final String TAG = "ProfileActivity";
 
     private LinearLayout scoresContainer;
     private TextView nameText;
@@ -55,6 +58,7 @@ public class ProfileActivity extends LogoutAppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_profile);
+        setupAppDrawer();
 
         nameText = findViewById(R.id.profileNameText);
         emailText = findViewById(R.id.profileEmailText);
@@ -102,13 +106,6 @@ public class ProfileActivity extends LogoutAppCompatActivity {
         }
     }
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.mute_only_menu, menu);
-        Music.bindMuteMenuItem(this, menu.findItem(R.id.action_mute_music));
-        return true;
-    }
-
     private void openTitleTiersScreen() {
         Intent intent = new Intent(this, TitleTiersActivity.class);
         if (rankLadderSnapshot != null) {
@@ -134,12 +131,17 @@ public class ProfileActivity extends LogoutAppCompatActivity {
                 response -> {
                     try {
                         if (!response.optBoolean("success", false)) {
-                            Toast.makeText(this, R.string.profile_load_failed, Toast.LENGTH_SHORT).show();
+                            showProfileLoadFailed(response.optString("message", null));
                             return;
                         }
-                        JSONObject user = response.getJSONObject("user");
-                        nameText.setText(user.optString("name", "Student"));
+                        JSONObject user = response.optJSONObject("user");
+                        if (user == null) {
+                            showProfileLoadFailed(null);
+                            return;
+                        }
+                        nameText.setText(user.optString("name", getString(R.string.profile_title)));
                         emailText.setText(user.optString("email", ""));
+
                         bindDashboard(response.optJSONObject("dashboard"));
 
                         JSONObject graduation = response.optJSONObject("graduation");
@@ -148,38 +150,103 @@ public class ProfileActivity extends LogoutAppCompatActivity {
 
                         JSONArray badges = response.optJSONArray("badges");
                         bindAchievementsEntry(badges);
-                        final String newBadgeId = BadgePrefs.syncNewBadge(this, badges);
-                        if (newBadgeId != null) {
-                            final String label = BadgePrefs.labelForBadge(badges, newBadgeId);
-                            getWindow().getDecorView().post(() -> FeedbackHelper.celebrate(
-                                    ProfileActivity.this,
-                                    getString(R.string.badge_unlock_title),
-                                    label,
-                                    CelebrationActivity.VARIANT_BADGE,
-                                    null,
-                                    null,
-                                    null));
+                        try {
+                            final String newBadgeId = BadgePrefs.syncNewBadge(this, badges);
+                            if (newBadgeId != null) {
+                                final String label = BadgePrefs.labelForBadge(badges, newBadgeId);
+                                getWindow().getDecorView().post(() -> FeedbackHelper.celebrate(
+                                        ProfileActivity.this,
+                                        getString(R.string.badge_unlock_title),
+                                        label,
+                                        CelebrationActivity.VARIANT_BADGE,
+                                        null,
+                                        null,
+                                        null));
+                            }
+                        } catch (Exception badgeError) {
+                            Log.w(TAG, "Badge celebration skipped", badgeError);
                         }
 
-                        scoresContainer.removeAllViews();
-                        JSONArray subjects = response.optJSONArray("quiz_scores_by_subject");
-                        if (subjects == null || subjects.length() == 0) {
-                            addEmptyScoresMessage();
-                            return;
-                        }
-
-                        LayoutInflater inflater = LayoutInflater.from(this);
-                        for (int i = 0; i < subjects.length(); i++) {
-                            JSONObject subject = subjects.getJSONObject(i);
-                            addSubjectSection(inflater, subject);
-                        }
+                        bindQuizScores(response.optJSONArray("quiz_scores_by_subject"));
                     } catch (Exception e) {
-                        Toast.makeText(this, R.string.profile_load_failed, Toast.LENGTH_SHORT).show();
+                        Log.e(TAG, "Profile response parse failed", e);
+                        showProfileLoadFailed(null);
                     }
                 },
-                error -> Toast.makeText(this, R.string.profile_load_failed, Toast.LENGTH_SHORT).show()
+                error -> {
+                    Log.e(TAG, "Profile request failed", error);
+                    showProfileLoadFailed(null);
+                }
         );
         Volley.newRequestQueue(this).add(request);
+    }
+
+    private void showProfileLoadFailed(String serverMessage) {
+        Toast.makeText(
+                this,
+                serverMessage != null && !serverMessage.isEmpty()
+                        ? serverMessage
+                        : getString(R.string.profile_load_failed),
+                Toast.LENGTH_LONG).show();
+    }
+
+    private void bindQuizScores(JSONArray subjects) {
+        scoresContainer.removeAllViews();
+        if (subjects == null || subjects.length() == 0) {
+            addEmptyScoresMessage();
+            return;
+        }
+
+        LayoutInflater inflater = LayoutInflater.from(this);
+        for (int i = 0; i < subjects.length(); i++) {
+            JSONObject subject = subjects.optJSONObject(i);
+            if (subject == null) {
+                continue;
+            }
+            try {
+                addSubjectSection(inflater, subject);
+            } catch (Exception e) {
+                Log.w(TAG, "Skipping subject score section", e);
+            }
+        }
+        if (scoresContainer.getChildCount() == 0) {
+            addEmptyScoresMessage();
+        }
+    }
+
+    private static boolean jsonBoolean(JSONObject object, String key) {
+        if (object == null || !object.has(key) || object.isNull(key)) {
+            return false;
+        }
+        Object value = object.opt(key);
+        if (value instanceof Boolean) {
+            return (Boolean) value;
+        }
+        if (value instanceof Number) {
+            return ((Number) value).intValue() != 0;
+        }
+        if (value instanceof String) {
+            return "true".equalsIgnoreCase((String) value) || "1".equals(value);
+        }
+        return false;
+    }
+
+    private static int jsonInt(JSONObject object, String key, int fallback) {
+        if (object == null || !object.has(key) || object.isNull(key)) {
+            return fallback;
+        }
+        Object value = object.opt(key);
+        if (value instanceof Number) {
+            return ((Number) value).intValue();
+        }
+        if (value instanceof String) {
+            try {
+                return Integer.parseInt((String) value);
+            } catch (NumberFormatException ignored) {
+                return fallback;
+            }
+        }
+        return fallback;
     }
 
     private void bindDashboard(JSONObject dashboard) {
@@ -358,7 +425,7 @@ public class ProfileActivity extends LogoutAppCompatActivity {
         inner.setOrientation(LinearLayout.VERTICAL);
 
         TextView subjectHeader = new TextView(this);
-        subjectHeader.setText(subject.getString("subject_name"));
+        subjectHeader.setText(subject.optString("subject_name", getString(R.string.profile_title)));
         subjectHeader.setTextAppearance(R.style.TextAppearance_QuantumRealm_Title);
         subjectHeader.setTextSize(18f);
         inner.addView(subjectHeader);
@@ -366,14 +433,17 @@ public class ProfileActivity extends LogoutAppCompatActivity {
         JSONArray modules = subject.optJSONArray("module_quizzes");
         if (modules != null) {
             for (int m = 0; m < modules.length(); m++) {
-                JSONObject mod = modules.getJSONObject(m);
+                JSONObject mod = modules.optJSONObject(m);
+                if (mod == null) {
+                    continue;
+                }
                 inner.addView(inflateScoreRow(
                         inflater,
-                        mod.getString("module_name"),
-                        mod.getInt("score"),
-                        mod.getInt("total"),
-                        mod.getInt("percent"),
-                        mod.getBoolean("passed"),
+                        mod.optString("module_name", getString(R.string.profile_title)),
+                        jsonInt(mod, "score", 0),
+                        jsonInt(mod, "total", 1),
+                        jsonInt(mod, "percent", 0),
+                        jsonBoolean(mod, "passed"),
                         false
                 ));
             }
@@ -384,10 +454,10 @@ public class ProfileActivity extends LogoutAppCompatActivity {
             inner.addView(inflateScoreRow(
                     inflater,
                     getString(R.string.profile_final_quiz_label),
-                    finalQuiz.getInt("score"),
-                    finalQuiz.getInt("total"),
-                    finalQuiz.getInt("percent"),
-                    finalQuiz.getBoolean("passed"),
+                    jsonInt(finalQuiz, "score", 0),
+                    jsonInt(finalQuiz, "total", 1),
+                    jsonInt(finalQuiz, "percent", 0),
+                    jsonBoolean(finalQuiz, "passed"),
                     true
             ));
         }

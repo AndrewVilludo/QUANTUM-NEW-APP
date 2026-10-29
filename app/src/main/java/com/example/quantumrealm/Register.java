@@ -222,12 +222,14 @@ public class Register extends AppCompatActivity {
                     },
                     error -> {
                         setRegisterLoading(false);
-                        String errorMessage = "Registration failed";
-                        if (error.networkResponse != null && error.networkResponse.data != null) {
-                            String responseBody = new String(error.networkResponse.data);
-                            errorMessage = parseRegisterErrorMessage(responseBody);
-                        }
-                        showFieldError(registerFormError, errorMessage);
+                        showFieldError(
+                                registerFormError,
+                                VolleyErrorHelper.message(
+                                        Register.this,
+                                        error,
+                                        R.string.auth_error_register_failed
+                                )
+                        );
                     }
             );
 
@@ -236,21 +238,6 @@ public class Register extends AppCompatActivity {
             setRegisterLoading(false);
             showFieldError(registerFormError, "Error: " + e.getMessage());
         }
-    }
-
-    private String parseRegisterErrorMessage(String responseBody) {
-        try {
-            JSONObject body = new JSONObject(responseBody);
-            String message = body.optString("message", "");
-            if (!message.isEmpty()) {
-                return message;
-            }
-        } catch (Exception ignored) {
-        }
-        if (responseBody.length() > 120) {
-            return "Registration failed. Check your details and try again.";
-        }
-        return "Registration failed: " + responseBody;
     }
 
     @Override

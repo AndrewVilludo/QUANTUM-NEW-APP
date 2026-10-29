@@ -32,6 +32,9 @@
         <activity android:name=".AchievementsActivity"/>
         <activity android:name=".CourseActivity"/>
         <activity
+            android:name=".ForgotPasswordActivity"
+            android:theme="@style/Theme.QuantumRealm.Auth" />
+        <activity
             android:name=".Register"
             android:theme="@style/Theme.QuantumRealm.Auth" />
         <activity android:name=".StudyJourney"/>

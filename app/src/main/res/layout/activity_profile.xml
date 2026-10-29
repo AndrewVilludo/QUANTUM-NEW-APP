@@ -1,9 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.drawerlayout.widget.DrawerLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/app_drawer_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/bg_game_screen"
-    android:orientation="vertical">
+    android:fitsSystemWindows="true">
+
+    <LinearLayout
+        android:id="@+id/app_drawer_content"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@drawable/bg_game_screen"
+        android:orientation="vertical">
 
     <ScrollView
         android:id="@+id/profileMainScroll"
@@ -277,4 +285,7 @@
         android:layout_marginBottom="@dimen/game_screen_padding"
         android:minHeight="48dp"
         android:text="@string/profile_logout_button" />
-</LinearLayout>
+    </LinearLayout>
+
+    <include layout="@layout/include_app_nav_view" />
+</androidx.drawerlayout.widget.DrawerLayout>

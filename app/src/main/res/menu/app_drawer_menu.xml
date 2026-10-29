@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <group android:checkableBehavior="single">
+        <item
+            android:id="@+id/nav_galaxy"
+            android:icon="@drawable/quantum_realm_logo"
+            android:title="@string/nav_galaxy" />
+        <item
+            android:id="@+id/nav_profile"
+            android:icon="@drawable/ic_profile"
+            android:title="@string/profile_title" />
+        <item
+            android:id="@+id/nav_title_tiers"
+            android:icon="@drawable/progress"
+            android:title="@string/nav_title_tiers" />
+        <item
+            android:id="@+id/nav_achievements"
+            android:icon="@drawable/ic_module_complete"
+            android:title="@string/nav_achievements" />
+    </group>
+    <item
+        android:id="@+id/nav_logout"
+        android:icon="@drawable/ic_logout"
+        android:title="@string/profile_logout_button" />
+</menu>

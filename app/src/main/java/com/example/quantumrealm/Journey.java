@@ -37,6 +37,7 @@ public class Journey extends LogoutAppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_journey);
+        setupAppDrawer();
 
         buttonContainer = findViewById(R.id.buttonContainer);
         journeyStatusText = findViewById(R.id.journeyStatusText);
