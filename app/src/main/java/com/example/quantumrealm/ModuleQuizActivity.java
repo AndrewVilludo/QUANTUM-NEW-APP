@@ -15,6 +15,7 @@ import android.widget.Toast;
 import androidx.appcompat.app.AlertDialog;
 
 import com.android.volley.toolbox.Volley;
+import com.google.android.material.card.MaterialCardView;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -27,6 +28,7 @@ import java.util.Map;
 public class ModuleQuizActivity extends LogoutAppCompatActivity {
 
     private TextView questionText, timerText, scoreText, quizProgressText;
+    private MaterialCardView questionCard;
     private ProgressBar quizProgressBar;
     private RadioGroup optionsGroup;
     private RadioButton optionA, optionB, optionC, optionD;
@@ -54,6 +56,7 @@ public class ModuleQuizActivity extends LogoutAppCompatActivity {
         scoreText = findViewById(R.id.scoreText);
         quizProgressText = findViewById(R.id.quizProgressText);
         quizProgressBar = findViewById(R.id.quizProgressBar);
+        questionCard = findViewById(R.id.questionCard);
         optionsGroup = findViewById(R.id.optionsGroup);
         optionA = findViewById(R.id.optionA);
         optionB = findViewById(R.id.optionB);
@@ -198,7 +201,10 @@ public class ModuleQuizActivity extends LogoutAppCompatActivity {
         int displayIndex = Math.min(currentQuestionIndex + 1, total);
         quizProgressText.setText(getString(R.string.quiz_progress, displayIndex, total));
         quizProgressBar.setProgress(total == 0 ? 0 : (displayIndex * 100 / total));
-        scoreText.setText(moduleName != null ? moduleName : "Module quiz");
+        QuizJuiceHelper.pulseProgressBar(quizProgressBar);
+        if (currentQuestionIndex == 0) {
+            scoreText.setText(moduleName != null ? moduleName : "Module quiz");
+        }
     }
 
     private void resetOptionStyles() {
@@ -221,14 +227,17 @@ public class ModuleQuizActivity extends LogoutAppCompatActivity {
         RadioButton selected = findViewById(selectedId);
         String selectedText = selected.getText().toString();
         selectedByQuizId.put(current.getId(), selectedText);
-        if (selectedText.equals(current.getCorrectAnswerText())) {
+        boolean correct = selectedText.equals(current.getCorrectAnswerText());
+        if (correct) {
             correctStreak++;
-            FeedbackHelper.successHaptic(optionsGroup);
+            CelebrationEffects.quizCorrect(optionsGroup);
         } else {
             correctStreak = 0;
-            FeedbackHelper.errorHaptic(optionsGroup);
+            CelebrationEffects.quizWrong(optionsGroup);
         }
-        scoreText.setText(getString(R.string.quiz_streak_format, correctStreak));
+        QuizJuiceHelper.flashQuestionCard(questionCard, correct);
+        QuizJuiceHelper.highlightOption(selected, correct);
+        QuizJuiceHelper.updateStreakDisplay(this, scoreText, correctStreak);
         currentQuestionIndex++;
         handler.postDelayed(this::showNextQuestion, 400);
     }
@@ -282,19 +291,31 @@ public class ModuleQuizActivity extends LogoutAppCompatActivity {
                         }
                         JSONObject engagement = response.optJSONObject("engagement");
                         String celebrationBody = celebration != null ? celebration.optString("body", "") : "";
-                        if (!celebrationBody.isEmpty()) {
-                            review.append("\n\n").append(celebrationBody);
-                        } else {
-                            review.append("\n\n").append(
-                                    EngagementUiHelper.appendEngagementSummary(this, "", engagement));
+                        if (celebrationBody.isEmpty()) {
+                            celebrationBody = EngagementUiHelper.appendEngagementSummary(this, "", engagement);
                         }
-                        review.append("\n\n").append(response.optString("message", ""));
+                        String summaryBody = scoreLine;
+                        if (!celebrationBody.isEmpty()) {
+                            summaryBody = summaryBody + "\n\n" + celebrationBody;
+                        }
+                        summaryBody = summaryBody + "\n\n" + response.optString("message", "");
+                        String reviewOnly = review.toString();
                         if (passed) {
-                            FeedbackHelper.celebrate(this, title, review.toString(), () -> {
-                                ModuleFlowHelper.backToCourse(this, subjectId);
-                                finish();
-                            });
+                            String variant = EngagementUiHelper.variantFromCelebration(celebration, engagement);
+                            FeedbackHelper.celebrate(
+                                    this,
+                                    title,
+                                    summaryBody,
+                                    variant,
+                                    engagement,
+                                    reviewOnly,
+                                    () -> {
+                                        ModuleFlowHelper.backToCourse(this, subjectId);
+                                        finish();
+                                    });
                         } else {
+                            review.append("\n\n").append(celebrationBody);
+                            review.append("\n\n").append(response.optString("message", ""));
                             new AlertDialog.Builder(this)
                                     .setTitle(title)
                                     .setMessage(review.toString())

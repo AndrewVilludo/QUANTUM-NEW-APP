@@ -42,4 +42,37 @@ public final class EngagementUiHelper {
         }
         return context.getString(defaultTitleRes);
     }
+
+    public static String variantFromCelebration(JSONObject celebration, JSONObject engagement) {
+        if (celebration != null && celebration.has("variant")) {
+            return celebration.optString("variant", CelebrationActivity.VARIANT_XP);
+        }
+        return pickCelebrationVariant(engagement, CelebrationActivity.VARIANT_XP);
+    }
+
+    public static String pickCelebrationVariant(JSONObject engagement, String fallback) {
+        if (engagement != null && engagement.optBoolean("leveled_up", false)) {
+            return CelebrationActivity.VARIANT_LEVEL_UP;
+        }
+        return fallback != null ? fallback : CelebrationActivity.VARIANT_XP;
+    }
+
+    public static int lottieResForVariant(String variant) {
+        if (CelebrationActivity.VARIANT_LEVEL_UP.equals(variant)) {
+            return R.raw.blue_planet;
+        }
+        if (CelebrationActivity.VARIANT_QUIZ_PASS.equals(variant)) {
+            return R.raw.module_lotties;
+        }
+        if (CelebrationActivity.VARIANT_GRADUATE.equals(variant)) {
+            return R.raw.intro;
+        }
+        if (CelebrationActivity.VARIANT_BADGE.equals(variant)) {
+            return R.raw.white;
+        }
+        if (CelebrationActivity.VARIANT_YEAR_COMPLETE.equals(variant)) {
+            return R.raw.journey;
+        }
+        return R.raw.green_circle;
+    }
 }

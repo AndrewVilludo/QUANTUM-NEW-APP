@@ -3,6 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools">
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.WAKE_LOCK"/>
+    <uses-permission android:name="android.permission.VIBRATE"/>
 
     <application
         android:name=".Music"
@@ -28,6 +29,7 @@
         <activity android:name=".QuestContinueActivity"/>
         <activity android:name=".ProfileActivity"/>
         <activity android:name=".TitleTiersActivity"/>
+        <activity android:name=".AchievementsActivity"/>
         <activity android:name=".CourseActivity"/>
         <activity
             android:name=".Register"
@@ -36,7 +38,10 @@
         <activity android:name=".SplashActivity"/>
         <activity android:name=".QuizActivity"/>
         <activity android:name=".Journey"/>
-
+        <activity android:name=".GraduationActivity"/>
+        <activity
+            android:name=".CelebrationActivity"
+            android:theme="@style/Theme.QuantumRealm" />
 
         <activity
             android:name=".MainActivity"

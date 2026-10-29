@@ -111,6 +111,13 @@
                         android:layout_marginTop="8dp"
                         android:textAppearance="@style/TextAppearance.QuantumRealm.Subtitle" />
 
+                    <com.google.android.material.switchmaterial.SwitchMaterial
+                        android:id="@+id/profileSfxSwitch"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:text="@string/profile_sfx_label" />
+
                     <com.google.android.material.card.MaterialCardView
                         android:id="@+id/profileNextLevelCard"
                         style="@style/Widget.QuantumRealm.Card"
@@ -179,6 +186,41 @@
                         </LinearLayout>
                     </com.google.android.material.card.MaterialCardView>
 
+                    <com.google.android.material.card.MaterialCardView
+                        android:id="@+id/profileAchievementsEntry"
+                        style="@style/Widget.QuantumRealm.Card"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:foreground="?attr/selectableItemBackground">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal"
+                            android:padding="14dp">
+
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="@string/profile_achievements_heading"
+                                android:textAppearance="@style/TextAppearance.QuantumRealm.Title"
+                                android:textSize="16sp" />
+
+                            <TextView
+                                android:id="@+id/profileAchievementsSummary"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/profile_achievements_open"
+                                android:textAppearance="@style/TextAppearance.QuantumRealm.Subtitle"
+                                android:textColor="@color/game_accent" />
+                        </LinearLayout>
+                    </com.google.android.material.card.MaterialCardView>
+
                     <TextView
                         android:id="@+id/profileStreakText"
                         android:layout_width="match_parent"
@@ -220,6 +262,17 @@
                 android:paddingBottom="8dp" />
         </LinearLayout>
     </ScrollView>
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/profileCertificateButton"
+        style="@style/Widget.QuantumRealm.Button.Success"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/game_screen_padding"
+        android:layout_marginEnd="@dimen/game_screen_padding"
+        android:layout_marginBottom="8dp"
+        android:text="@string/profile_view_certificate"
+        android:visibility="gone" />
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/profileLogoutButton"

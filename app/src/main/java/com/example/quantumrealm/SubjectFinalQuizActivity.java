@@ -1,5 +1,6 @@
 package com.example.quantumrealm;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.Handler;
@@ -16,6 +17,7 @@ import android.widget.Toast;
 import androidx.appcompat.app.AlertDialog;
 
 import com.android.volley.toolbox.Volley;
+import com.google.android.material.card.MaterialCardView;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -30,7 +32,9 @@ public class SubjectFinalQuizActivity extends LogoutAppCompatActivity {
     private static final String TAG = "SubjectFinalQuiz";
 
     private TextView questionText, timerText, scoreText, quizProgressText;
+    private MaterialCardView questionCard;
     private ProgressBar quizProgressBar;
+    private int correctStreak = 0;
     private RadioGroup optionsGroup;
     private RadioButton optionA, optionB, optionC, optionD;
     private Button nextButton;
@@ -54,6 +58,7 @@ public class SubjectFinalQuizActivity extends LogoutAppCompatActivity {
         scoreText = findViewById(R.id.scoreText);
         quizProgressText = findViewById(R.id.quizProgressText);
         quizProgressBar = findViewById(R.id.quizProgressBar);
+        questionCard = findViewById(R.id.questionCard);
         optionsGroup = findViewById(R.id.optionsGroup);
         optionA = findViewById(R.id.optionA);
         optionB = findViewById(R.id.optionB);
@@ -99,6 +104,7 @@ public class SubjectFinalQuizActivity extends LogoutAppCompatActivity {
         handler.removeCallbacksAndMessages(null);
         selectedByQuizId.clear();
         currentQuestionIndex = 0;
+        correctStreak = 0;
         ModuleFlowHelper.navigateToLearningGalaxy(this);
     }
 
@@ -192,7 +198,10 @@ public class SubjectFinalQuizActivity extends LogoutAppCompatActivity {
         int displayIndex = Math.min(currentQuestionIndex + 1, total);
         quizProgressText.setText(getString(R.string.quiz_progress, displayIndex, total));
         quizProgressBar.setProgress(total == 0 ? 0 : (displayIndex * 100 / total));
-        scoreText.setText("Final quiz");
+        QuizJuiceHelper.pulseProgressBar(quizProgressBar);
+        if (currentQuestionIndex == 0) {
+            scoreText.setText("Final quiz");
+        }
     }
 
     private void resetOptionStyles() {
@@ -213,7 +222,19 @@ public class SubjectFinalQuizActivity extends LogoutAppCompatActivity {
             return;
         }
         RadioButton selected = findViewById(selectedId);
-        selectedByQuizId.put(current.getId(), selected.getText().toString());
+        String selectedText = selected.getText().toString();
+        selectedByQuizId.put(current.getId(), selectedText);
+        boolean correct = selectedText.equals(current.getCorrectAnswerText());
+        if (correct) {
+            correctStreak++;
+            CelebrationEffects.quizCorrect(optionsGroup);
+        } else {
+            correctStreak = 0;
+            CelebrationEffects.quizWrong(optionsGroup);
+        }
+        QuizJuiceHelper.flashQuestionCard(questionCard, correct);
+        QuizJuiceHelper.highlightOption(selected, correct);
+        QuizJuiceHelper.updateStreakDisplay(this, scoreText, correctStreak);
         currentQuestionIndex++;
         handler.postDelayed(this::showNextQuestion, 400);
     }
@@ -256,15 +277,50 @@ public class SubjectFinalQuizActivity extends LogoutAppCompatActivity {
                         if (!message.isEmpty()) {
                             message = score + " / " + total + "\n\n" + message;
                         }
-                        new AlertDialog.Builder(this)
-                                .setTitle(passed ? "Subject mastered!" : "Final quiz")
-                                .setMessage(message)
-                                .setCancelable(false)
-                                .setPositiveButton("OK", (d, w) -> {
+                        JSONObject graduation = response.optJSONObject("graduation");
+                        boolean newlyGraduated = graduation != null
+                                && graduation.optBoolean("newly_graduated", false);
+                        JSONObject celebration = response.optJSONObject("celebration");
+
+                        if (passed) {
+                            String title = celebration != null
+                                    ? celebration.optString("title", "Subject mastered!")
+                                    : "Subject mastered!";
+                            String celebrationMessage = celebration != null
+                                    ? celebration.optString("body", message)
+                                    : message;
+                            String variant = celebration != null
+                                    ? celebration.optString("variant", CelebrationActivity.VARIANT_QUIZ_PASS)
+                                    : CelebrationActivity.VARIANT_QUIZ_PASS;
+                            Intent intent = CelebrationActivity.intent(this, title, celebrationMessage, variant, null);
+                            if (newlyGraduated) {
+                                intent.putExtra(CelebrationActivity.EXTRA_SHOW_CERTIFICATE, true);
+                                if (graduation != null) {
+                                    intent.putExtra(
+                                            CelebrationActivity.EXTRA_STUDENT_NAME,
+                                            graduation.optString("student_name", ""));
+                                }
+                                intent.putExtra(
+                                        CelebrationActivity.EXTRA_PRIMARY_LABEL,
+                                        getString(R.string.celebration_continue));
+                            }
+                            FeedbackHelper.celebrateWithExtras(this, intent, () -> {
+                                if (!newlyGraduated) {
                                     ModuleFlowHelper.backToCourse(this, subjectId);
-                                    finish();
-                                })
-                                .show();
+                                }
+                                finish();
+                            });
+                        } else {
+                            new AlertDialog.Builder(this)
+                                    .setTitle("Final quiz")
+                                    .setMessage(message)
+                                    .setCancelable(false)
+                                    .setPositiveButton("OK", (d, w) -> {
+                                        ModuleFlowHelper.backToCourse(this, subjectId);
+                                        finish();
+                                    })
+                                    .show();
+                        }
                     },
                     error -> {
                         nextButton.setEnabled(true);

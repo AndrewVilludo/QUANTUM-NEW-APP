@@ -152,13 +152,22 @@ public class LessonActivityActivity extends LogoutAppCompatActivity {
                     if (success && correct) {
                         FeedbackHelper.successHaptic(submitButton);
                         JSONObject celebration = response.optJSONObject("celebration");
+                        JSONObject engagement = response.optJSONObject("engagement");
                         String title = celebration != null
                                 ? celebration.optString("title", getString(R.string.lesson_correct))
                                 : getString(R.string.lesson_correct);
                         String celebrationBody = celebration != null
                                 ? celebration.optString("body", "")
                                 : "";
-                        FeedbackHelper.celebrate(this, title, celebrationBody, this::refreshModuleLessonsAndAdvance);
+                        String variant = EngagementUiHelper.variantFromCelebration(celebration, engagement);
+                        FeedbackHelper.celebrate(
+                                this,
+                                title,
+                                celebrationBody,
+                                variant,
+                                engagement,
+                                null,
+                                this::refreshModuleLessonsAndAdvance);
                     } else {
                         FeedbackHelper.errorHaptic(submitButton);
                         FeedbackHelper.showSnackbar(submitButton,

@@ -21,6 +21,7 @@ import androidx.appcompat.app.AlertDialog;
 
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.card.MaterialCardView;
+import com.google.android.material.switchmaterial.SwitchMaterial;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -41,7 +42,12 @@ public class ProfileActivity extends LogoutAppCompatActivity {
     private LinearLayout xpRewardsContainer;
     private MaterialCardView nextLevelCard;
     private MaterialCardView titleTiersEntry;
+    private MaterialCardView achievementsEntry;
+    private TextView achievementsSummary;
+    private JSONArray badgesSnapshot = new JSONArray();
     private MaterialButton continueQuestButton;
+    private MaterialButton certificateButton;
+    private SwitchMaterial sfxSwitch;
     private JSONObject continueQuest;
     private JSONArray xpRewardLines = new JSONArray();
     private JSONObject nextLevelSnapshot;
@@ -56,6 +62,7 @@ public class ProfileActivity extends LogoutAppCompatActivity {
         emailText = findViewById(R.id.profileEmailText);
         scoresContainer = findViewById(R.id.profileScoresContainer);
         MaterialButton logoutButton = findViewById(R.id.profileLogoutButton);
+        certificateButton = findViewById(R.id.profileCertificateButton);
         dashboardCard = findViewById(R.id.profileDashboardCard);
         rankText = findViewById(R.id.profileRankText);
         rankProgressBar = findViewById(R.id.profileRankProgressBar);
@@ -67,7 +74,13 @@ public class ProfileActivity extends LogoutAppCompatActivity {
         nextLevelCard = findViewById(R.id.profileNextLevelCard);
         xpRewardsContainer = findViewById(R.id.profileXpRewardsContainer);
         titleTiersEntry = findViewById(R.id.profileTitleTiersEntry);
+        achievementsEntry = findViewById(R.id.profileAchievementsEntry);
+        achievementsSummary = findViewById(R.id.profileAchievementsSummary);
         continueQuestButton = findViewById(R.id.profileContinueQuestButton);
+        sfxSwitch = findViewById(R.id.profileSfxSwitch);
+        sfxSwitch.setChecked(CelebrationSound.isSfxEnabled(this));
+        sfxSwitch.setOnCheckedChangeListener((button, checked) ->
+                CelebrationSound.setSfxEnabled(this, checked));
 
         continueQuestButton.setOnClickListener(v ->
                 ModuleFlowHelper.continueQuestFromDashboard(this, continueQuest));
@@ -77,7 +90,13 @@ public class ProfileActivity extends LogoutAppCompatActivity {
             }
         });
         titleTiersEntry.setOnClickListener(v -> openTitleTiersScreen());
+        achievementsEntry.setOnClickListener(v -> openAchievementsScreen());
         logoutButton.setOnClickListener(v -> confirmLogout());
+        certificateButton.setOnClickListener(v -> {
+            Intent intent = GraduationActivity.intent(this);
+            intent.putExtra("student_name", nameText.getText().toString());
+            startActivity(intent);
+        });
         loadProfile();
     }
 
@@ -104,6 +123,14 @@ public class ProfileActivity extends LogoutAppCompatActivity {
         startActivity(intent);
     }
 
+    private void openAchievementsScreen() {
+        Intent intent = new Intent(this, AchievementsActivity.class);
+        if (badgesSnapshot.length() > 0) {
+            intent.putExtra(AchievementsActivity.EXTRA_BADGES_JSON, badgesSnapshot.toString());
+        }
+        startActivity(intent);
+    }
+
     private void loadProfile() {
         AuthenticatedJsonObjectRequest request = new AuthenticatedJsonObjectRequest(
                 this,
@@ -120,6 +147,25 @@ public class ProfileActivity extends LogoutAppCompatActivity {
                         nameText.setText(user.optString("name", "Student"));
                         emailText.setText(user.optString("email", ""));
                         bindDashboard(response.optJSONObject("dashboard"));
+
+                        JSONObject graduation = response.optJSONObject("graduation");
+                        boolean showCertificate = graduation != null && graduation.optBoolean("graduated", false);
+                        certificateButton.setVisibility(showCertificate ? View.VISIBLE : View.GONE);
+
+                        JSONArray badges = response.optJSONArray("badges");
+                        bindAchievementsEntry(badges);
+                        final String newBadgeId = BadgePrefs.syncNewBadge(this, badges);
+                        if (newBadgeId != null) {
+                            final String label = BadgePrefs.labelForBadge(badges, newBadgeId);
+                            getWindow().getDecorView().post(() -> FeedbackHelper.celebrate(
+                                    ProfileActivity.this,
+                                    getString(R.string.badge_unlock_title),
+                                    label,
+                                    CelebrationActivity.VARIANT_BADGE,
+                                    null,
+                                    null,
+                                    null));
+                        }
 
                         scoresContainer.removeAllViews();
                         JSONArray subjects = response.optJSONArray("quiz_scores_by_subject");
@@ -269,6 +315,30 @@ public class ProfileActivity extends LogoutAppCompatActivity {
                 .setMessage(body.toString().trim())
                 .setPositiveButton(android.R.string.ok, null)
                 .show();
+    }
+
+    private void bindAchievementsEntry(JSONArray badges) {
+        if (achievementsEntry == null || achievementsSummary == null) {
+            return;
+        }
+        if (badges == null || badges.length() == 0) {
+            achievementsEntry.setVisibility(View.GONE);
+            badgesSnapshot = new JSONArray();
+            return;
+        }
+        badgesSnapshot = badges;
+        achievementsEntry.setVisibility(View.VISIBLE);
+        int earned = 0;
+        for (int i = 0; i < badges.length(); i++) {
+            JSONObject row = badges.optJSONObject(i);
+            if (row != null && row.optBoolean("earned", false)) {
+                earned++;
+            }
+        }
+        achievementsSummary.setText(getString(
+                R.string.profile_achievements_summary,
+                earned,
+                badges.length()));
     }
 
     private void addEmptyScoresMessage() {

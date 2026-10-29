@@ -46,6 +46,17 @@
                 android:layout_marginTop="4dp"
                 android:text="@string/year_enter"
                 android:textAppearance="@style/TextAppearance.QuantumRealm.Subtitle" />
+
+            <ProgressBar
+                android:id="@+id/yearProgressBar"
+                style="?android:attr/progressBarStyleHorizontal"
+                android:layout_width="match_parent"
+                android:layout_height="6dp"
+                android:layout_marginTop="8dp"
+                android:max="100"
+                android:progress="0"
+                android:progressDrawable="@drawable/progress_quiz"
+                android:visibility="gone" />
         </LinearLayout>
 
         <ImageView

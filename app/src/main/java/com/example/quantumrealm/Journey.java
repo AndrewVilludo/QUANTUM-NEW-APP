@@ -7,6 +7,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -30,6 +31,7 @@ public class Journey extends LogoutAppCompatActivity {
     private TextView journeyStatusText;
     private SwipeRefreshLayout journeySwipeRefresh;
     private RequestQueue requestQueue;
+    private boolean pendingYearCelebration;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,6 +52,18 @@ public class Journey extends LogoutAppCompatActivity {
     protected void onResume() {
         super.onResume();
         loadGalaxyYears();
+    }
+
+    private void showYearCompleteCelebrationIfNeeded() {
+        pendingYearCelebration = false;
+        FeedbackHelper.celebrate(
+                this,
+                getString(R.string.year_complete_celebration_title),
+                getString(R.string.year_complete_celebration_body),
+                CelebrationActivity.VARIANT_YEAR_COMPLETE,
+                null,
+                null,
+                null);
     }
 
     private void loadGalaxyYears() {
@@ -137,6 +151,17 @@ public class Journey extends LogoutAppCompatActivity {
         LayoutInflater inflater = LayoutInflater.from(this);
         buttonContainer.removeAllViews();
 
+        if (!JourneyProgressPrefs.isInitialized(this)) {
+            for (int i = 0; i < yearLevels.length(); i++) {
+                JSONObject seed = yearLevels.getJSONObject(i);
+                JourneyProgressPrefs.setYearCompleted(
+                        this,
+                        seed.getInt("id"),
+                        seed.optBoolean("is_completed", false));
+            }
+            JourneyProgressPrefs.markInitialized(this);
+        }
+
         for (int i = 0; i < yearLevels.length(); i++) {
             JSONObject year = yearLevels.getJSONObject(i);
             String yearName = year.getString("name");
@@ -150,8 +175,29 @@ public class Journey extends LogoutAppCompatActivity {
 
             TextView nameText = cardView.findViewById(R.id.yearName);
             TextView subtitleText = cardView.findViewById(R.id.yearSubtitle);
+            ProgressBar yearProgressBar = cardView.findViewById(R.id.yearProgressBar);
             ImageView lockIcon = cardView.findViewById(R.id.yearLockIcon);
             nameText.setText(yearName);
+
+            int modulesCompleted = year.optInt("modules_completed", 0);
+            int modulesTotal = year.optInt("modules_total", 0);
+            int progressPercent = year.optInt("progress_percent", 0);
+            if (isUnlocked && !isCompleted && modulesTotal > 0 && yearProgressBar != null) {
+                yearProgressBar.setVisibility(View.VISIBLE);
+                yearProgressBar.setProgress(progressPercent);
+                subtitleText.setText(getString(
+                        R.string.year_progress_modules,
+                        modulesCompleted,
+                        modulesTotal,
+                        progressPercent));
+            }
+
+            if (isCompleted && !JourneyProgressPrefs.wasYearCompleted(this, yearId)) {
+                JourneyProgressPrefs.setYearCompleted(this, yearId, true);
+                pendingYearCelebration = true;
+            } else if (!isCompleted) {
+                JourneyProgressPrefs.setYearCompleted(this, yearId, false);
+            }
 
             LottieAnimationView planetAnimation = cardView.findViewById(R.id.planetAnimation);
             int animationResId = getResources().getIdentifier("planet" + yearId, "raw", getPackageName());
@@ -185,6 +231,10 @@ public class Journey extends LogoutAppCompatActivity {
             } else if (isCompleted) {
                 subtitleText.setText(R.string.year_completed);
                 subtitleText.setTextColor(ContextCompat.getColor(this, R.color.game_success));
+                if (root != null) {
+                    root.setStrokeWidth(4);
+                    root.setStrokeColor(ContextCompat.getColor(this, R.color.game_success));
+                }
                 cardView.setOnClickListener(v -> openYearActivity(yearId, yearName, description));
             } else {
                 subtitleText.setText(R.string.year_enter);
@@ -196,6 +246,10 @@ public class Journey extends LogoutAppCompatActivity {
 
         journeyStatusText.setVisibility(View.GONE);
         buttonContainer.setVisibility(View.VISIBLE);
+
+        if (pendingYearCelebration) {
+            journeyStatusText.post(this::showYearCompleteCelebrationIfNeeded);
+        }
     }
 
     private void showLoadError(String message) {
