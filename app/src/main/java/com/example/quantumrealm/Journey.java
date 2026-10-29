@@ -167,25 +167,21 @@ public class Journey extends LogoutAppCompatActivity {
                 root.setAlpha(1f);
             }
 
-            int modulesCompleted = year.optInt("modules_completed", 0);
-            int modulesTotal = year.optInt("modules_total", 0);
-            int progressPercent = year.optInt("progress_percent", 0);
-
             if (!isUnlocked) {
-                if (modulesTotal > 0) {
-                    subtitleText.setText(getString(R.string.year_progress_format,
-                            modulesCompleted, modulesTotal, progressPercent));
-                } else {
-                    subtitleText.setText(R.string.year_locked_hint);
+                String unlockMessage = year.optString("unlock_message", "");
+                if (unlockMessage.isEmpty()) {
+                    unlockMessage = getString(R.string.year_locked_hint);
                 }
+                subtitleText.setText(unlockMessage);
                 if (lockIcon != null) {
                     lockIcon.setVisibility(View.VISIBLE);
                 }
                 if (root != null) {
                     root.setAlpha(0.55f);
                 }
+                final String lockedToast = unlockMessage;
                 cardView.setOnClickListener(v ->
-                        Toast.makeText(Journey.this, R.string.year_locked_hint, Toast.LENGTH_SHORT).show());
+                        Toast.makeText(Journey.this, lockedToast, Toast.LENGTH_SHORT).show());
             } else if (isCompleted) {
                 subtitleText.setText(R.string.year_completed);
                 subtitleText.setTextColor(ContextCompat.getColor(this, R.color.game_success));

@@ -60,6 +60,10 @@ public class YearActivity extends LogoutAppCompatActivity {
                 Request.Method.GET, url, null,
                 response -> {
                     try {
+                        if (!response.optBoolean("success", true)) {
+                            Toast.makeText(this, response.optString("message", "Could not load subjects."), Toast.LENGTH_LONG).show();
+                            return;
+                        }
                         // Parse the response JSON to extract courses data
                         JSONArray courses = response.getJSONArray("data");
 
@@ -94,8 +98,15 @@ public class YearActivity extends LogoutAppCompatActivity {
                     }
                 },
                 error -> {
-                    // Show error message if the request fails
-                    Toast.makeText(this, "Failed to fetch courses: " + error.toString(), Toast.LENGTH_LONG).show();
+                    String message = "Failed to fetch subjects.";
+                    if (error.networkResponse != null && error.networkResponse.data != null) {
+                        try {
+                            JSONObject body = new JSONObject(new String(error.networkResponse.data));
+                            message = body.optString("message", message);
+                        } catch (Exception ignored) {
+                        }
+                    }
+                    Toast.makeText(this, message, Toast.LENGTH_LONG).show();
                     error.printStackTrace();
                 }
         );

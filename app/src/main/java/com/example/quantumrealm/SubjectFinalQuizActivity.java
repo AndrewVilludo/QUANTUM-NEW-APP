@@ -4,6 +4,7 @@ import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.Handler;
 import android.os.Looper;
+import android.util.Log;
 import android.view.MenuItem;
 import android.widget.Button;
 import android.widget.ProgressBar;
@@ -25,6 +26,8 @@ import java.util.List;
 import java.util.Map;
 
 public class SubjectFinalQuizActivity extends LogoutAppCompatActivity {
+
+    private static final String TAG = "SubjectFinalQuiz";
 
     private TextView questionText, timerText, scoreText, quizProgressText;
     private ProgressBar quizProgressBar;
@@ -154,6 +157,9 @@ public class SubjectFinalQuizActivity extends LogoutAppCompatActivity {
 
         if (currentQuestionIndex < questionList.size()) {
             exitGuard.setAttemptInProgress(true);
+            nextButton.setText(currentQuestionIndex == questionList.size() - 1
+                    ? R.string.quiz_submit
+                    : R.string.quiz_next);
             Question question = questionList.get(currentQuestionIndex);
             questionText.setText(question.getQuestion());
             optionA.setText(question.getAnswer1());
@@ -213,17 +219,21 @@ public class SubjectFinalQuizActivity extends LogoutAppCompatActivity {
     }
 
     private void submitFinalQuiz() {
+        nextButton.setEnabled(false);
         try {
             JSONArray answers = new JSONArray();
             for (Question q : questionList) {
                 JSONObject row = new JSONObject();
                 row.put("quiz_id", q.getId());
-                row.put("selected", selectedByQuizId.getOrDefault(q.getId(), ""));
+                String selected = selectedByQuizId.getOrDefault(q.getId(), "");
+                row.put("selected", selected == null ? "" : selected);
                 answers.put(row);
             }
 
             JSONObject body = new JSONObject();
             body.put("answers", answers);
+
+            Log.d(TAG, "Submitting final quiz subjectId=" + subjectId + " answerCount=" + answers.length());
 
             AuthenticatedJsonObjectRequest request = new AuthenticatedJsonObjectRequest(
                     this,
@@ -232,21 +242,62 @@ public class SubjectFinalQuizActivity extends LogoutAppCompatActivity {
                     body,
                     response -> {
                         exitGuard.setAttemptInProgress(false);
+                        if (!response.optBoolean("success", true)) {
+                            String msg = response.optString("message", "Submit failed");
+                            Log.w(TAG, "Submit rejected: " + msg);
+                            Toast.makeText(this, msg, Toast.LENGTH_LONG).show();
+                            nextButton.setEnabled(true);
+                            return;
+                        }
                         boolean passed = response.optBoolean("passed", false);
+                        int score = response.optInt("score", 0);
+                        int total = response.optInt("total", questionList.size());
+                        String message = response.optString("message", "");
+                        if (!message.isEmpty()) {
+                            message = score + " / " + total + "\n\n" + message;
+                        }
                         new AlertDialog.Builder(this)
                                 .setTitle(passed ? "Subject mastered!" : "Final quiz")
-                                .setMessage(response.optString("message", ""))
+                                .setMessage(message)
+                                .setCancelable(false)
                                 .setPositiveButton("OK", (d, w) -> {
                                     ModuleFlowHelper.backToCourse(this, subjectId);
                                     finish();
                                 })
                                 .show();
                     },
-                    error -> Toast.makeText(this, "Submit failed", Toast.LENGTH_SHORT).show()
+                    error -> {
+                        nextButton.setEnabled(true);
+                        String message = parseSubmitError(error);
+                        Log.e(TAG, "Submit failed: " + message, error);
+                        Toast.makeText(this, message, Toast.LENGTH_LONG).show();
+                    }
             );
             Volley.newRequestQueue(this).add(request);
         } catch (Exception e) {
-            Toast.makeText(this, "Submit error", Toast.LENGTH_SHORT).show();
+            nextButton.setEnabled(true);
+            Log.e(TAG, "Submit error building payload", e);
+            Toast.makeText(this, "Submit error: " + e.getMessage(), Toast.LENGTH_LONG).show();
         }
+    }
+
+    private String parseSubmitError(com.android.volley.VolleyError error) {
+        String fallback = "Submit failed";
+        if (error.networkResponse == null) {
+            return fallback + " (no network response)";
+        }
+        int status = error.networkResponse.statusCode;
+        fallback = fallback + " (HTTP " + status + ")";
+        if (error.networkResponse.data != null) {
+            try {
+                JSONObject body = new JSONObject(new String(error.networkResponse.data));
+                String msg = body.optString("message", "");
+                if (!msg.isEmpty()) {
+                    return msg + " (HTTP " + status + ")";
+                }
+            } catch (Exception ignored) {
+            }
+        }
+        return fallback;
     }
 }

@@ -34,6 +34,11 @@ public class AuthenticatedJsonObjectRequest extends JsonObjectRequest {
     public Map<String, String> getHeaders() throws AuthFailureError {
         Map<String, String> headers = new HashMap<>();
         headers.put("Accept", "application/json");
+        if (getMethod() == com.android.volley.Request.Method.POST
+                || getMethod() == com.android.volley.Request.Method.PUT
+                || getMethod() == com.android.volley.Request.Method.PATCH) {
+            headers.put("Content-Type", "application/json; charset=utf-8");
+        }
         String token = AuthHelper.getToken(context);
         if (token != null && !token.isEmpty()) {
             headers.put("Authorization", "Bearer " + token);

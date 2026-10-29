@@ -17,4 +17,14 @@
         <item name="android:textColorPrimary">@color/game_text_primary</item>
         <item name="colorControlNormal">@color/game_text_primary</item>
     </style>
+
+    <style name="Theme.QuantumRealm.Auth" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <item name="colorPrimary">@color/game_primary</item>
+        <item name="colorSecondary">@color/game_accent</item>
+        <item name="android:statusBarColor">@color/game_bg_dark</item>
+        <item name="android:navigationBarColor">@color/game_bg_dark</item>
+        <item name="android:windowBackground">@color/game_bg_dark</item>
+        <item name="materialButtonStyle">@style/Widget.QuantumRealm.Button.Primary</item>
+        <item name="textInputStyle">@style/Widget.QuantumRealm.TextInputLayout.Auth</item>
+    </style>
 </resources>

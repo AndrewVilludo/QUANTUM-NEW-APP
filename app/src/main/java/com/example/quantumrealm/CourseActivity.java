@@ -83,7 +83,7 @@ public class CourseActivity extends LogoutAppCompatActivity {
                                     this,
                                     moduleContainer,
                                     "Final subject quiz",
-                                    "All modules complete — take the comprehensive quiz",
+                                    "30 questions from all modules — need 70% to pass",
                                     "🏆",
                                     false,
                                     () -> {

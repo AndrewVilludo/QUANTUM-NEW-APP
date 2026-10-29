@@ -1,5 +1,36 @@
 <resources>
     <string name="app_name">Quantum Realm</string>
+    <string name="auth_login_subtitle">Log in to continue your Learning Galaxy quest</string>
+    <string name="auth_login_button">Login</string>
+    <string name="auth_register_button">Create account</string>
+    <string name="auth_register_title">Join the realm</string>
+    <string name="auth_register_subtitle">Create your account and pick your starting year</string>
+    <string name="auth_section_profile">Profile</string>
+    <string name="auth_section_security">Security</string>
+    <string name="auth_section_academic">Academic</string>
+    <string name="auth_hint_email">Email</string>
+    <string name="auth_hint_password">Password</string>
+    <string name="auth_hint_name">Full name</string>
+    <string name="auth_hint_confirm_password">Confirm password</string>
+    <string name="auth_hint_year_level">Year level</string>
+    <string name="auth_forgot_password">Forgot password?</string>
+    <string name="auth_back_to_login">Already have an account? Log in</string>
+    <string name="auth_error_email_required">Enter your email address</string>
+    <string name="auth_error_email_invalid">Enter a valid email address</string>
+    <string name="auth_error_password_required">Enter your password</string>
+    <string name="auth_error_fields_required">Please fill in all fields</string>
+    <string name="auth_error_password_mismatch">Passwords do not match</string>
+    <string name="auth_error_year_required">Select your year level</string>
+    <string name="auth_error_year_invalid">Choose a year from the list</string>
+    <string-array name="auth_year_levels">
+        <item>1st year</item>
+        <item>2nd year</item>
+        <item>3rd year</item>
+        <item>4th year</item>
+    </string-array>
+    <string name="auth_error_login_failed">Invalid email or password</string>
+    <string name="auth_loading_login">Signing in…</string>
+    <string name="auth_loading_register">Creating account…</string>
     <string name="locked_level">Level locked</string>
     <string name="module_completed">Module completed</string>
     <string name="module_completed_badge">Done</string>
@@ -19,8 +50,10 @@
     <string name="journey_login_required">Please sign in again to open the Learning Galaxy.</string>
     <string name="year_enter">Enter this world →</string>
     <string name="year_completed">Year completed — tap to review</string>
-    <string name="year_locked_hint">Complete all module quizzes in the previous year first</string>
+    <string name="year_locked_hint">Pass the Final Subject Quiz for every subject in the previous year to unlock</string>
     <string name="quiz_progress">Question %1$d of %2$d</string>
+    <string name="quiz_next">Next</string>
+    <string name="quiz_submit">Submit</string>
     <string name="quiz_exit_confirm_message">Are you sure you want to exit? Your progress will be lost and you\'ll have to start over.</string>
     <string name="quiz_exit_confirm_cancel">Cancel</string>
     <string name="quiz_exit_confirm_exit">Exit</string>

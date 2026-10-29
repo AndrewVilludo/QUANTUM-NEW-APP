@@ -178,6 +178,30 @@ public class LessonActivity extends LogoutAppCompatActivity {
                 row.put("content", slide.optString("content", ""));
                 if (slide.has("micro_check")) {
                     row.put("micro_check", slide.getJSONObject("micro_check"));
+                } else if (slide.has("check_question") && slide.has("check_answer")) {
+                    JSONObject micro = new JSONObject();
+                    micro.put("question", slide.getString("check_question"));
+                    micro.put("correct", slide.getString("check_answer"));
+                    JSONArray options = slide.optJSONArray("check_options");
+                    if (options == null || options.length() == 0) {
+                        options = new JSONArray();
+                        options.put("Yes, continue");
+                        options.put("Review this slide");
+                    }
+                    micro.put("options", options);
+                    row.put("micro_check", micro);
+                } else {
+                    int step = i + 1;
+                    if (total > 2 && step < total && step % 2 == 0) {
+                        JSONObject micro = new JSONObject();
+                        micro.put("question", "Quick check: did you understand this slide?");
+                        JSONArray options = new JSONArray();
+                        options.put("Yes, I got it");
+                        options.put("Not yet — I'll re-read");
+                        micro.put("options", options);
+                        micro.put("correct", "Yes, I got it");
+                        row.put("micro_check", micro);
+                    }
                 }
                 out.put(row);
             } catch (Exception ignored) {
@@ -240,10 +264,17 @@ public class LessonActivity extends LogoutAppCompatActivity {
             return;
         }
         RadioButton selected = findViewById(selectedId);
+        if (lessonId <= 0) {
+            FeedbackHelper.showSnackbar(lessonSlidePager, "Invalid lesson. Re-open from the module map.");
+            return;
+        }
         try {
+            JSONObject slide = slides.getJSONObject(slideIndex);
+            int slideStep = slide.optInt("step", slideIndex + 1);
+
             JSONObject body = new JSONObject();
             body.put("lesson_id", lessonId);
-            body.put("slide_step", slideIndex + 1);
+            body.put("slide_step", slideStep);
             body.put("selected", selected.getText().toString());
 
             AuthenticatedJsonObjectRequest request = new AuthenticatedJsonObjectRequest(
@@ -263,7 +294,17 @@ public class LessonActivity extends LogoutAppCompatActivity {
                             FeedbackHelper.showSnackbar(lessonSlidePager, response.optString("message", "Try again"));
                         }
                     },
-                    error -> FeedbackHelper.showSnackbar(lessonSlidePager, "Could not verify answer")
+                    error -> {
+                        String message = "Could not verify answer";
+                        if (error.networkResponse != null && error.networkResponse.data != null) {
+                            try {
+                                JSONObject errBody = new JSONObject(new String(error.networkResponse.data));
+                                message = errBody.optString("message", message);
+                            } catch (Exception ignored) {
+                            }
+                        }
+                        FeedbackHelper.showSnackbar(lessonSlidePager, message);
+                    }
             );
             Volley.newRequestQueue(this).add(request);
         } catch (Exception e) {
