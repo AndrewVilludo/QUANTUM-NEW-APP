@@ -38,21 +38,44 @@ public final class ModuleFlowHelper {
         return intent;
     }
 
+    /**
+     * Uses module-progress API state so navigation stays correct when lesson count changes in the CMS.
+     */
     public static void openNextAfterCompletion(Context context, int moduleId, String moduleName,
-                                                 int subjectId, JSONArray lessons, int completedIndex) {
-        int nextIndex = completedIndex + 1;
+                                                 int subjectId, JSONObject moduleProgress) {
         try {
-            if (nextIndex < lessons.length()) {
-                JSONObject nextLesson = lessons.getJSONObject(nextIndex);
-                Intent intent = slideshowIntent(context, nextLesson, nextIndex, moduleId, moduleName, subjectId);
-                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                context.startActivity(intent);
-            } else {
+            JSONObject moduleMeta = moduleProgress.optJSONObject("module");
+            JSONArray lessons = moduleProgress.getJSONArray("data");
+
+            boolean quizReady = moduleMeta != null && moduleMeta.optBoolean("module_quiz_ready", false);
+            if (quizReady) {
                 Intent intent = questContinueIntent(context, moduleId, moduleName, subjectId);
                 intent.putExtra(QuestContinueActivity.EXTRA_MODE, QuestContinueActivity.MODE_QUIZ_GATE);
                 intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
                 context.startActivity(intent);
+                return;
             }
+
+            if (moduleProgress.isNull("current_lesson_index")) {
+                Intent map = new Intent(context, ModuleActivity.class);
+                map.putExtra("course_id", moduleId);
+                map.putExtra("course_name", moduleName);
+                map.putExtra("subject_id", subjectId);
+                map.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                context.startActivity(map);
+                return;
+            }
+
+            int nextIndex = moduleProgress.optInt("current_lesson_index", 0);
+            if (nextIndex >= 0 && nextIndex < lessons.length()) {
+                JSONObject nextLesson = lessons.getJSONObject(nextIndex);
+                Intent intent = slideshowIntent(context, nextLesson, nextIndex, moduleId, moduleName, subjectId);
+                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                context.startActivity(intent);
+                return;
+            }
+
+            backToCourse(context, subjectId);
         } catch (Exception ignored) {
             backToCourse(context, subjectId);
         }
@@ -88,6 +111,14 @@ public final class ModuleFlowHelper {
         intent.putExtra("course_id", subjectId);
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         context.startActivity(intent);
+    }
+
+    /** Learning Galaxy map (year selection). */
+    public static void navigateToLearningGalaxy(android.app.Activity activity) {
+        Intent intent = new Intent(activity, Journey.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        activity.startActivity(intent);
+        activity.finish();
     }
 
     public static void continueQuestFromDashboard(Context context, JSONObject quest) {

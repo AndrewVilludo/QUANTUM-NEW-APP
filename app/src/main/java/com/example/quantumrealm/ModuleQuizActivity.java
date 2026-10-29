@@ -4,6 +4,7 @@ import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.Handler;
 import android.os.Looper;
+import android.view.MenuItem;
 import android.widget.Button;
 import android.widget.ProgressBar;
 import android.widget.RadioButton;
@@ -41,6 +42,7 @@ public class ModuleQuizActivity extends LogoutAppCompatActivity {
     private CountDownTimer countDownTimer;
     private static final long TIMER_DURATION = 15000;
     private final Handler handler = new Handler(Looper.getMainLooper());
+    private QuizExitGuard exitGuard;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -68,7 +70,39 @@ public class ModuleQuizActivity extends LogoutAppCompatActivity {
         }
 
         nextButton.setOnClickListener(v -> checkAnswer());
+        exitGuard = new QuizExitGuard(this, this::discardAttemptAndExitToGalaxy);
         loadModuleQuiz();
+    }
+
+    @Override
+    public boolean onSupportNavigateUp() {
+        if (exitGuard.interceptLeaveAttempt(this)) {
+            return true;
+        }
+        return super.onSupportNavigateUp();
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (Music.handleMuteMenuItem(this, item)) {
+            return true;
+        }
+        if (item.getItemId() == R.id.action_profile && exitGuard.interceptLeaveAttempt(this)) {
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+    private void discardAttemptAndExitToGalaxy() {
+        exitGuard.setAttemptInProgress(false);
+        if (countDownTimer != null) {
+            countDownTimer.cancel();
+        }
+        handler.removeCallbacksAndMessages(null);
+        selectedByQuizId.clear();
+        currentQuestionIndex = 0;
+        correctStreak = 0;
+        ModuleFlowHelper.navigateToLearningGalaxy(this);
     }
 
     private void loadModuleQuiz() {
@@ -131,6 +165,7 @@ public class ModuleQuizActivity extends LogoutAppCompatActivity {
         nextButton.setEnabled(true);
 
         if (currentQuestionIndex < questionList.size()) {
+            exitGuard.setAttemptInProgress(true);
             Question question = questionList.get(currentQuestionIndex);
             questionText.setText(question.getQuestion());
             optionA.setText(question.getAnswer1());
@@ -217,11 +252,16 @@ public class ModuleQuizActivity extends LogoutAppCompatActivity {
                     ApiConfig.api("module-quiz/" + moduleId + "/submit"),
                     body,
                     response -> {
+                        exitGuard.setAttemptInProgress(false);
                         boolean passed = response.optBoolean("passed", false);
                         int score = response.optInt("score", 0);
                         int total = response.optInt("total", questionList.size());
                         int percent = response.optInt("percent", 0);
-                        String title = passed ? "Module quiz passed!" : "Module quiz score";
+                        JSONObject celebration = response.optJSONObject("celebration");
+                        String title = passed
+                                ? EngagementUiHelper.celebrationTitle(
+                                        this, celebration, R.string.module_quiz_passed_title)
+                                : "Module quiz score";
                         String scoreLine = "Your score: " + score + " / " + total + " (" + percent + "%)";
                         StringBuilder review = new StringBuilder(scoreLine);
                         review.append("\n\n").append(getString(R.string.quiz_review_title)).append("\n");
@@ -241,8 +281,12 @@ public class ModuleQuizActivity extends LogoutAppCompatActivity {
                         } catch (Exception ignored) {
                         }
                         JSONObject engagement = response.optJSONObject("engagement");
-                        if (engagement != null) {
-                            review.append("\n\n+").append(engagement.optInt("xp_awarded", 0)).append(" Quantum XP");
+                        String celebrationBody = celebration != null ? celebration.optString("body", "") : "";
+                        if (!celebrationBody.isEmpty()) {
+                            review.append("\n\n").append(celebrationBody);
+                        } else {
+                            review.append("\n\n").append(
+                                    EngagementUiHelper.appendEngagementSummary(this, "", engagement));
                         }
                         review.append("\n\n").append(response.optString("message", ""));
                         if (passed) {

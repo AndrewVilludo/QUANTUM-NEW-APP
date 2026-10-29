@@ -162,7 +162,9 @@ public class ModuleActivity extends LogoutAppCompatActivity {
                 FeedbackHelper.showSnackbar(moduleContainer, R.string.lesson_status_locked);
                 return;
             }
-            startActivity(ModuleFlowHelper.slideshowIntent(this, lesson, index, moduleId, moduleName, subjectId));
+            Intent intent = ModuleFlowHelper.slideshowIntent(this, lesson, index, moduleId, moduleName, subjectId);
+            intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
+            startActivity(intent);
         } catch (Exception e) {
             FeedbackHelper.showSnackbar(moduleContainer, "Could not open lesson");
         }
@@ -172,8 +174,10 @@ public class ModuleActivity extends LogoutAppCompatActivity {
         try {
             if (currentLessonIndex != null && lessonsCache != null) {
                 JSONObject lesson = lessonsCache.getJSONObject(currentLessonIndex);
-                startActivity(ModuleFlowHelper.slideshowIntent(
-                        this, lesson, currentLessonIndex, moduleId, moduleName, subjectId));
+                Intent intent = ModuleFlowHelper.slideshowIntent(
+                        this, lesson, currentLessonIndex, moduleId, moduleName, subjectId);
+                intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                startActivity(intent);
                 return;
             }
             if (lessonsCache != null) {

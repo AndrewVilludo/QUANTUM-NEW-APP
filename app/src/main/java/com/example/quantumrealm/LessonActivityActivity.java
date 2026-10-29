@@ -147,8 +147,9 @@ public class LessonActivityActivity extends LogoutAppCompatActivity {
                 body,
                 response -> {
                     setSubmitting(false);
-                    boolean correct = response.optBoolean("correct", false);
-                    if (correct) {
+                    boolean success = response.optBoolean("success", false);
+                    boolean correct = response.optBoolean("correct", success);
+                    if (success && correct) {
                         FeedbackHelper.successHaptic(submitButton);
                         JSONObject celebration = response.optJSONObject("celebration");
                         String title = celebration != null
@@ -182,9 +183,14 @@ public class LessonActivityActivity extends LogoutAppCompatActivity {
                 null,
                 response -> {
                     try {
+                        if (!response.optBoolean("success", false)) {
+                            ModuleFlowHelper.backToCourse(this, subjectId);
+                            finish();
+                            return;
+                        }
                         moduleLessonsCache = response.getJSONArray("data");
                         ModuleFlowHelper.openNextAfterCompletion(
-                                this, moduleId, moduleName, subjectId, moduleLessonsCache, lessonIndex);
+                                this, moduleId, moduleName, subjectId, response);
                         finish();
                     } catch (Exception e) {
                         ModuleFlowHelper.backToCourse(this, subjectId);

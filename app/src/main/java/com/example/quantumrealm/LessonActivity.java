@@ -58,6 +58,19 @@ public class LessonActivity extends LogoutAppCompatActivity {
         setContentView(R.layout.activity_lesson);
 
         bindViews();
+        applyLessonFromIntent();
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+        applyLessonFromIntent();
+    }
+
+    private void applyLessonFromIntent() {
+        slideIndex = 0;
+        microChecksPassed.clear();
         loadLessonFromIntent();
         setupPager();
     }
@@ -331,3 +344,4 @@ public class LessonActivity extends LogoutAppCompatActivity {
         startActivity(ModuleFlowHelper.activityIntent(this, lesson, lessonIndex, moduleId, moduleName, subjectId));
     }
 }
+

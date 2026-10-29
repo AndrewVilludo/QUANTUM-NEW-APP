@@ -19,12 +19,15 @@
 
         <activity android:name=".YearActivity"/>
         <activity android:name=".ModuleActivity"/>
-        <activity android:name=".LessonActivity"/>
+        <activity
+            android:name=".LessonActivity"
+            android:launchMode="singleTop"/>
         <activity android:name=".LessonActivityActivity"/>
         <activity android:name=".SubjectFinalQuizActivity"/>
         <activity android:name=".ModuleQuizActivity"/>
         <activity android:name=".QuestContinueActivity"/>
         <activity android:name=".ProfileActivity"/>
+        <activity android:name=".TitleTiersActivity"/>
         <activity android:name=".CourseActivity"/>
         <activity android:name=".Register"/>
         <activity android:name=".StudyJourney"/>

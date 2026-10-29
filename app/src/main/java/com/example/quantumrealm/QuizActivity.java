@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.Handler;
 import android.os.Looper;
+import android.view.MenuItem;
 import android.widget.Button;
 import android.widget.ProgressBar;
 import android.widget.RadioButton;
@@ -40,6 +41,7 @@ public class QuizActivity extends LogoutAppCompatActivity {
     private CountDownTimer countDownTimer;
     private static final long TIMER_DURATION = 10000;
     private final Handler handler = new Handler(Looper.getMainLooper());
+    private QuizExitGuard exitGuard;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -68,6 +70,38 @@ public class QuizActivity extends LogoutAppCompatActivity {
         }
 
         nextButton.setOnClickListener(v -> checkAnswer());
+        exitGuard = new QuizExitGuard(this, this::discardAttemptAndExitToGalaxy);
+    }
+
+    @Override
+    public boolean onSupportNavigateUp() {
+        if (exitGuard.interceptLeaveAttempt(this)) {
+            return true;
+        }
+        return super.onSupportNavigateUp();
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (Music.handleMuteMenuItem(this, item)) {
+            return true;
+        }
+        if (item.getItemId() == R.id.action_profile && exitGuard.interceptLeaveAttempt(this)) {
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+    private void discardAttemptAndExitToGalaxy() {
+        exitGuard.setAttemptInProgress(false);
+        if (countDownTimer != null) {
+            countDownTimer.cancel();
+        }
+        handler.removeCallbacksAndMessages(null);
+        wrongAnswers.clear();
+        currentQuestionIndex = 0;
+        score = 0;
+        ModuleFlowHelper.navigateToLearningGalaxy(this);
     }
 
     private void fetchQuizData(int lessonId) {
@@ -119,6 +153,7 @@ public class QuizActivity extends LogoutAppCompatActivity {
         nextButton.setEnabled(true);
 
         if (currentQuestionIndex < questionList.size()) {
+            exitGuard.setAttemptInProgress(true);
             Question question = questionList.get(currentQuestionIndex);
             questionText.setText(question.getQuestion());
             optionA.setText(question.getAnswer1());
@@ -219,6 +254,7 @@ public class QuizActivity extends LogoutAppCompatActivity {
     }
 
     private void showFinalScore() {
+        exitGuard.setAttemptInProgress(false);
         StringBuilder result = new StringBuilder();
         result.append("Final XP: ").append(score).append("/").append(questionList.size()).append("\n\n");
 

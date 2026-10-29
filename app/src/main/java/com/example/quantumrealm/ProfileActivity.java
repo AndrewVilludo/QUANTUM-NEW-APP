@@ -1,10 +1,13 @@
 package com.example.quantumrealm;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.View;
+import android.text.TextUtils;
 import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -14,6 +17,8 @@ import androidx.core.content.ContextCompat;
 
 import com.android.volley.Request;
 import com.android.volley.toolbox.Volley;
+import androidx.appcompat.app.AlertDialog;
+
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.card.MaterialCardView;
 
@@ -26,12 +31,21 @@ public class ProfileActivity extends LogoutAppCompatActivity {
     private TextView nameText;
     private TextView emailText;
     private MaterialCardView dashboardCard;
+    private TextView rankText;
+    private ProgressBar rankProgressBar;
+    private TextView rankProgressText;
     private TextView xpText;
     private TextView streakText;
     private TextView dailyGoalText;
-    private TextView badgesText;
+    private TextView nextLevelText;
+    private LinearLayout xpRewardsContainer;
+    private MaterialCardView nextLevelCard;
+    private MaterialCardView titleTiersEntry;
     private MaterialButton continueQuestButton;
     private JSONObject continueQuest;
+    private JSONArray xpRewardLines = new JSONArray();
+    private JSONObject nextLevelSnapshot;
+    private JSONObject rankLadderSnapshot;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,14 +57,26 @@ public class ProfileActivity extends LogoutAppCompatActivity {
         scoresContainer = findViewById(R.id.profileScoresContainer);
         MaterialButton logoutButton = findViewById(R.id.profileLogoutButton);
         dashboardCard = findViewById(R.id.profileDashboardCard);
+        rankText = findViewById(R.id.profileRankText);
+        rankProgressBar = findViewById(R.id.profileRankProgressBar);
+        rankProgressText = findViewById(R.id.profileRankProgressText);
         xpText = findViewById(R.id.profileXpText);
         streakText = findViewById(R.id.profileStreakText);
         dailyGoalText = findViewById(R.id.profileDailyGoalText);
-        badgesText = findViewById(R.id.profileBadgesText);
+        nextLevelText = findViewById(R.id.profileNextLevelText);
+        nextLevelCard = findViewById(R.id.profileNextLevelCard);
+        xpRewardsContainer = findViewById(R.id.profileXpRewardsContainer);
+        titleTiersEntry = findViewById(R.id.profileTitleTiersEntry);
         continueQuestButton = findViewById(R.id.profileContinueQuestButton);
 
         continueQuestButton.setOnClickListener(v ->
                 ModuleFlowHelper.continueQuestFromDashboard(this, continueQuest));
+        nextLevelCard.setOnClickListener(v -> {
+            if (nextLevelSnapshot != null) {
+                showNextLevelDetailDialog(nextLevelSnapshot);
+            }
+        });
+        titleTiersEntry.setOnClickListener(v -> openTitleTiersScreen());
         logoutButton.setOnClickListener(v -> confirmLogout());
         loadProfile();
     }
@@ -68,6 +94,14 @@ public class ProfileActivity extends LogoutAppCompatActivity {
         getMenuInflater().inflate(R.menu.mute_only_menu, menu);
         Music.bindMuteMenuItem(this, menu.findItem(R.id.action_mute_music));
         return true;
+    }
+
+    private void openTitleTiersScreen() {
+        Intent intent = new Intent(this, TitleTiersActivity.class);
+        if (rankLadderSnapshot != null) {
+            intent.putExtra(TitleTiersActivity.EXTRA_RANK_LADDER, rankLadderSnapshot.toString());
+        }
+        startActivity(intent);
     }
 
     private void loadProfile() {
@@ -114,26 +148,127 @@ public class ProfileActivity extends LogoutAppCompatActivity {
             return;
         }
         dashboardCard.setVisibility(View.VISIBLE);
+        JSONObject rank = dashboard.optJSONObject("rank");
+        if (rank != null) {
+            rankText.setText(getString(
+                    R.string.profile_rank_format,
+                    rank.optString("title", ""),
+                    rank.optInt("level", 1)));
+            int xpInLevel = rank.optInt("xp_in_level", 0);
+            int xpForNext = Math.max(1, rank.optInt("xp_for_next_level", 1));
+            rankProgressBar.setProgress(xpForNext == 0 ? 0 : (xpInLevel * 100 / xpForNext));
+            rankProgressText.setText(getString(R.string.profile_rank_progress_format, xpInLevel, xpForNext));
+        } else {
+            rankText.setText("");
+            rankProgressBar.setProgress(0);
+            rankProgressText.setText("");
+        }
         xpText.setText(getString(R.string.profile_xp_format, dashboard.optInt("quantum_xp", 0)));
         streakText.setText(getString(R.string.profile_streak_format, dashboard.optInt("daily_streak", 0)));
         dailyGoalText.setText(getString(
                 R.string.profile_daily_goal_format,
                 dashboard.optInt("lessons_completed_today", 0),
                 dashboard.optInt("daily_lesson_goal", 1)));
-        JSONArray badges = dashboard.optJSONArray("badges");
-        int earned = 0;
-        int total = 0;
-        if (badges != null) {
-            total = badges.length();
-            for (int i = 0; i < badges.length(); i++) {
-                if (badges.optJSONObject(i).optBoolean("earned", false)) {
-                    earned++;
-                }
-            }
-        }
-        badgesText.setText(getString(R.string.profile_badges_format, earned, total));
+        bindProgression(dashboard.optJSONObject("rank_ladder"), rank);
         continueQuest = dashboard.optJSONObject("continue_quest");
         continueQuestButton.setVisibility(continueQuest != null ? View.VISIBLE : View.GONE);
+    }
+
+    private void bindProgression(JSONObject ladder, JSONObject rank) {
+        xpRewardsContainer.removeAllViews();
+        rankLadderSnapshot = ladder;
+
+        if (ladder == null) {
+            nextLevelCard.setVisibility(View.GONE);
+            titleTiersEntry.setVisibility(View.GONE);
+            return;
+        }
+
+        try {
+            if (rank != null) {
+                ladder.put("rank", rank);
+            }
+        } catch (Exception ignored) {
+        }
+
+        titleTiersEntry.setVisibility(View.VISIBLE);
+
+        JSONObject next = ladder.optJSONObject("next_level");
+        nextLevelSnapshot = next;
+        if (next != null) {
+            nextLevelCard.setVisibility(View.VISIBLE);
+            nextLevelText.setText(getString(
+                    R.string.profile_next_level_format,
+                    next.optString("title", ""),
+                    next.optInt("level", 1),
+                    next.optInt("xp_remaining", 0),
+                    next.optInt("total_xp_required", 0)));
+        } else {
+            nextLevelCard.setVisibility(View.GONE);
+        }
+
+        JSONArray rewards = ladder.optJSONArray("xp_rewards");
+        xpRewardLines = rewards != null ? rewards : new JSONArray();
+        if (rewards != null) {
+            for (int i = 0; i < rewards.length(); i++) {
+                JSONObject row = rewards.optJSONObject(i);
+                if (row == null) {
+                    continue;
+                }
+                TextView line = new TextView(this);
+                line.setText(getString(
+                        R.string.profile_xp_reward_row,
+                        row.optString("label", ""),
+                        row.optString("xp", "")));
+                line.setTextAppearance(R.style.TextAppearance_QuantumRealm_Subtitle);
+                xpRewardsContainer.addView(line);
+            }
+        }
+    }
+
+    private void showNextLevelDetailDialog(JSONObject level) {
+        if (level == null) {
+            return;
+        }
+
+        int levelNum = level.optInt("level", 1);
+        String title = level.optString("title", "");
+
+        StringBuilder body = new StringBuilder();
+        body.append(getString(R.string.profile_level_detail_status,
+                getString(R.string.profile_rank_state_upcoming))).append("\n\n");
+        String requirement = level.optString("requirement", "");
+        if (!TextUtils.isEmpty(requirement)) {
+            body.append(getString(R.string.profile_level_detail_requirement, requirement)).append("\n\n");
+        }
+        String reward = level.optString("reward", "");
+        if (!TextUtils.isEmpty(reward)) {
+            body.append(getString(R.string.profile_level_detail_reward, reward)).append("\n\n");
+        }
+        int xpRemaining = level.optInt("xp_remaining", 0);
+        if (xpRemaining > 0) {
+            body.append(getString(R.string.profile_level_detail_xp_remaining, xpRemaining)).append("\n\n");
+        }
+
+        body.append(getString(R.string.profile_level_detail_earn_heading)).append("\n");
+        for (int i = 0; i < xpRewardLines.length(); i++) {
+            JSONObject row = xpRewardLines.optJSONObject(i);
+            if (row == null) {
+                continue;
+            }
+            body.append("• ")
+                    .append(getString(
+                            R.string.profile_xp_reward_row,
+                            row.optString("label", ""),
+                            row.optString("xp", "")))
+                    .append("\n");
+        }
+
+        new AlertDialog.Builder(this)
+                .setTitle(getString(R.string.profile_level_detail_title, levelNum, title))
+                .setMessage(body.toString().trim())
+                .setPositiveButton(android.R.string.ok, null)
+                .show();
     }
 
     private void addEmptyScoresMessage() {
