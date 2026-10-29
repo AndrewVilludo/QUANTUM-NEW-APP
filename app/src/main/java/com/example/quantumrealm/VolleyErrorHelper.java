@@ -17,8 +17,12 @@ public final class VolleyErrorHelper {
     private VolleyErrorHelper() {
     }
 
+    public static boolean isConnectionFailure(VolleyError error) {
+        return error == null || error.networkResponse == null;
+    }
+
     public static String message(Context context, VolleyError error, @StringRes int httpFallbackRes) {
-        if (error == null || error.networkResponse == null) {
+        if (isConnectionFailure(error)) {
             return context.getString(R.string.auth_error_server_unreachable);
         }
 

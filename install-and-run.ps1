@@ -15,6 +15,12 @@ if (-not $online) {
     exit 1
 }
 
+Write-Host "Forwarding emulator port 8000 to this PC (adb reverse)..."
+& $adb reverse tcp:8000 tcp:8000 | Out-Null
+if ($LASTEXITCODE -ne 0) {
+    Write-Warning "adb reverse failed; the app will still try 10.0.2.2 and 127.0.0.1 automatically."
+}
+
 Write-Host "Building and installing debug APK..."
 .\gradlew.bat installDebug
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }

@@ -68,12 +68,15 @@ public class Journey extends LogoutAppCompatActivity {
     }
 
     private void loadGalaxyYears() {
-        buttonContainer.removeAllViews();
-        buttonContainer.setVisibility(View.GONE);
         journeyStatusText.setVisibility(View.VISIBLE);
         journeyStatusText.setText(R.string.journey_loading);
+        buttonContainer.removeAllViews();
+        buttonContainer.setVisibility(View.GONE);
 
         if (!AuthHelper.isLoggedIn(this)) {
+            buttonContainer.removeAllViews();
+            buttonContainer.setVisibility(View.GONE);
+            journeyStatusText.setVisibility(View.VISIBLE);
             journeyStatusText.setText(R.string.journey_login_required);
             Toast.makeText(this, R.string.journey_login_required, Toast.LENGTH_LONG).show();
             return;
@@ -149,8 +152,10 @@ public class Journey extends LogoutAppCompatActivity {
             return;
         }
 
-        LayoutInflater inflater = LayoutInflater.from(this);
         buttonContainer.removeAllViews();
+        journeyStatusText.setVisibility(View.GONE);
+        buttonContainer.setVisibility(View.VISIBLE);
+        LayoutInflater inflater = LayoutInflater.from(this);
 
         if (!JourneyProgressPrefs.isInitialized(this)) {
             for (int i = 0; i < yearLevels.length(); i++) {

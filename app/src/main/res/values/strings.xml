@@ -37,7 +37,7 @@
         <item>4th year</item>
     </string-array>
     <string name="auth_error_login_failed">Invalid email or password</string>
-    <string name="auth_error_server_unreachable">Cannot reach the server. Check your network and that the API is running (php artisan serve --host=0.0.0.0 --port=8000).</string>
+    <string name="auth_error_server_unreachable">Cannot reach the API from the emulator. Keep Laravel running on port 8000, then run: adb reverse tcp:8000 tcp:8000 and reopen the app (or use install-and-run.cmd).</string>
     <string name="auth_error_request_failed">Something went wrong (HTTP %1$d). Try again in a moment.</string>
     <string name="auth_error_register_failed">Registration failed. Check your details and try again.</string>
     <string name="auth_loading_login">Signing in…</string>
@@ -145,6 +145,7 @@
     <string name="achievements_progress_format">%1$d / %2$d badges unlocked</string>
     <string name="achievements_progress_hint">Tap a badge to see how you earned it or what to do next.</string>
     <string name="achievements_empty">No achievements configured yet.</string>
+    <string name="achievements_load_failed">Could not load achievements. Check your connection and try again.</string>
     <string name="achievements_tap_for_details">Tap for details</string>
     <string name="achievements_keep_exploring">Keep learning and taking quizzes.</string>
     <string name="achievement_status_earned">Earned</string>
@@ -200,6 +201,7 @@
     <string name="title_tiers_page_heading">Your title journey</string>
     <string name="title_tiers_subtitle_default">Unlock new titles as you earn Quantum XP. Tap a tier for details.</string>
     <string name="title_tiers_empty">No title tiers available yet.</string>
+    <string name="title_tiers_load_failed">Could not load title tiers. Pull to refresh from Profile or try again.</string>
     <string name="title_tier_levels_format">Levels %1$s</string>
     <string name="title_tier_state_locked">Locked</string>
     <string name="title_tier_state_current">Current</string>

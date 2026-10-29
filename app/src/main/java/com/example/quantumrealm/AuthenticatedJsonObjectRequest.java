@@ -4,7 +4,6 @@ import android.content.Context;
 
 import com.android.volley.AuthFailureError;
 import com.android.volley.Response;
-import com.android.volley.toolbox.JsonObjectRequest;
 
 import org.json.JSONObject;
 
@@ -14,9 +13,7 @@ import java.util.Map;
 /**
  * GET/POST JSON request with Sanctum Bearer token from login.
  */
-public class AuthenticatedJsonObjectRequest extends JsonObjectRequest {
-
-    private final Context context;
+public class AuthenticatedJsonObjectRequest extends HostFallbackJsonObjectRequest {
 
     public AuthenticatedJsonObjectRequest(
             Context context,
@@ -26,8 +23,32 @@ public class AuthenticatedJsonObjectRequest extends JsonObjectRequest {
             Response.Listener<JSONObject> listener,
             Response.ErrorListener errorListener
     ) {
-        super(method, url, jsonRequest, listener, errorListener);
-        this.context = context.getApplicationContext();
+        super(context, method, url, jsonRequest, listener, errorListener);
+    }
+
+    private AuthenticatedJsonObjectRequest(
+            Context context,
+            int method,
+            String url,
+            JSONObject jsonRequest,
+            Response.Listener<JSONObject> listener,
+            Response.ErrorListener errorListener,
+            boolean fallbackAttempted
+    ) {
+        super(context, method, url, jsonRequest, listener, errorListener, fallbackAttempted);
+    }
+
+    @Override
+    protected HostFallbackJsonObjectRequest createRetry(String alternateUrl) {
+        return new AuthenticatedJsonObjectRequest(
+                context,
+                getMethod(),
+                alternateUrl,
+                requestBody,
+                successListener,
+                failureListener,
+                true
+        );
     }
 
     @Override

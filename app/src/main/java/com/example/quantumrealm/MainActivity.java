@@ -18,7 +18,6 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
-import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.button.MaterialButton;
@@ -139,7 +138,8 @@ public class MainActivity extends AppCompatActivity {
             json.put("email", email);
             json.put("password", password);
 
-            JsonObjectRequest request = new JsonObjectRequest(
+            HostFallbackJsonObjectRequest request = new HostFallbackJsonObjectRequest(
+                    MainActivity.this,
                     Request.Method.POST, LOGIN_URL, json,
                     response -> {
                         Log.d("API_RESPONSE", "Response: " + response.toString());

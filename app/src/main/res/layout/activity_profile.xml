@@ -23,9 +23,19 @@
         android:padding="@dimen/game_screen_padding">
 
         <LinearLayout
+            android:id="@+id/profileMainContent"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical">
+
+            <ProgressBar
+                android:id="@+id/profileLoading"
+                style="?android:attr/progressBarStyle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginBottom="8dp"
+                android:visibility="gone" />
 
             <TextView
                 android:layout_width="match_parent"

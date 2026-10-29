@@ -16,12 +16,9 @@ import com.google.android.material.card.MaterialCardView;
 
 import androidx.core.content.ContextCompat;
 
-import com.android.volley.Request;
-import com.android.volley.toolbox.Volley;
 import androidx.appcompat.app.AlertDialog;
 
 import com.google.android.material.button.MaterialButton;
-import com.google.android.material.card.MaterialCardView;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -54,11 +51,15 @@ public class ProfileActivity extends LogoutAppCompatActivity {
     private JSONObject nextLevelSnapshot;
     private JSONObject rankLadderSnapshot;
 
+    private ProgressBar profileLoading;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_profile);
         setupAppDrawer();
+
+        profileLoading = findViewById(R.id.profileLoading);
 
         nameText = findViewById(R.id.profileNameText);
         emailText = findViewById(R.id.profileEmailText);
@@ -98,6 +99,12 @@ public class ProfileActivity extends LogoutAppCompatActivity {
         loadProfile();
     }
 
+    private void setProfileLoading(boolean loading) {
+        if (profileLoading != null) {
+            profileLoading.setVisibility(loading ? View.VISIBLE : View.GONE);
+        }
+    }
+
     @Override
     protected void onResume() {
         super.onResume();
@@ -108,77 +115,103 @@ public class ProfileActivity extends LogoutAppCompatActivity {
 
     private void openTitleTiersScreen() {
         Intent intent = new Intent(this, TitleTiersActivity.class);
-        if (rankLadderSnapshot != null) {
-            intent.putExtra(TitleTiersActivity.EXTRA_RANK_LADDER, rankLadderSnapshot.toString());
+        String payload = titleTiersPayloadJson();
+        if (payload != null) {
+            intent.putExtra(TitleTiersActivity.EXTRA_RANK_LADDER, payload);
         }
         startActivity(intent);
     }
 
+    private String titleTiersPayloadJson() {
+        if (rankLadderSnapshot == null) {
+            return null;
+        }
+        try {
+            JSONObject payload = new JSONObject();
+            JSONArray bands = rankLadderSnapshot.optJSONArray("title_bands");
+            if (bands != null) {
+                payload.put("title_bands", bands);
+            }
+            JSONArray rewards = rankLadderSnapshot.optJSONArray("xp_rewards");
+            if (rewards != null) {
+                payload.put("xp_rewards", rewards);
+            }
+            JSONObject next = rankLadderSnapshot.optJSONObject("next_level");
+            if (next != null) {
+                payload.put("next_level", next);
+            }
+            if (payload.length() == 0) {
+                return rankLadderSnapshot.toString();
+            }
+            return payload.toString();
+        } catch (Exception e) {
+            Log.w(TAG, "Using full rank ladder snapshot for title tiers", e);
+            return rankLadderSnapshot.toString();
+        }
+    }
+
     private void openAchievementsScreen() {
         Intent intent = new Intent(this, AchievementsActivity.class);
-        if (badgesSnapshot.length() > 0) {
+        if (badgesSnapshot != null && badgesSnapshot.length() > 0) {
             intent.putExtra(AchievementsActivity.EXTRA_BADGES_JSON, badgesSnapshot.toString());
         }
         startActivity(intent);
     }
 
     private void loadProfile() {
-        AuthenticatedJsonObjectRequest request = new AuthenticatedJsonObjectRequest(
-                this,
-                Request.Method.GET,
-                ApiConfig.api("student-profile"),
-                null,
-                response -> {
-                    try {
-                        if (!response.optBoolean("success", false)) {
-                            showProfileLoadFailed(response.optString("message", null));
-                            return;
-                        }
-                        JSONObject user = response.optJSONObject("user");
-                        if (user == null) {
-                            showProfileLoadFailed(null);
-                            return;
-                        }
-                        nameText.setText(user.optString("name", getString(R.string.profile_title)));
-                        emailText.setText(user.optString("email", ""));
-
-                        bindDashboard(response.optJSONObject("dashboard"));
-
-                        JSONObject graduation = response.optJSONObject("graduation");
-                        boolean showCertificate = graduation != null && graduation.optBoolean("graduated", false);
-                        certificateButton.setVisibility(showCertificate ? View.VISIBLE : View.GONE);
-
-                        JSONArray badges = response.optJSONArray("badges");
-                        bindAchievementsEntry(badges);
-                        try {
-                            final String newBadgeId = BadgePrefs.syncNewBadge(this, badges);
-                            if (newBadgeId != null) {
-                                final String label = BadgePrefs.labelForBadge(badges, newBadgeId);
-                                getWindow().getDecorView().post(() -> FeedbackHelper.celebrate(
-                                        ProfileActivity.this,
-                                        getString(R.string.badge_unlock_title),
-                                        label,
-                                        CelebrationActivity.VARIANT_BADGE,
-                                        null,
-                                        null,
-                                        null));
-                            }
-                        } catch (Exception badgeError) {
-                            Log.w(TAG, "Badge celebration skipped", badgeError);
-                        }
-
-                        bindQuizScores(response.optJSONArray("quiz_scores_by_subject"));
-                    } catch (Exception e) {
-                        Log.e(TAG, "Profile response parse failed", e);
+        setProfileLoading(true);
+        StudentProfileClient.fetch(this, new StudentProfileClient.Callback() {
+            @Override
+            public void onSuccess(JSONObject response) {
+                setProfileLoading(false);
+                try {
+                    JSONObject user = response.optJSONObject("user");
+                    if (user == null) {
                         showProfileLoadFailed(null);
+                        return;
                     }
-                },
-                error -> {
-                    Log.e(TAG, "Profile request failed", error);
+                    nameText.setText(user.optString("name", getString(R.string.profile_title)));
+                    emailText.setText(user.optString("email", ""));
+
+                    bindDashboard(response.optJSONObject("dashboard"));
+
+                    JSONObject graduation = response.optJSONObject("graduation");
+                    boolean showCertificate = graduation != null && jsonBoolean(graduation, "graduated");
+                    certificateButton.setVisibility(showCertificate ? View.VISIBLE : View.GONE);
+
+                    JSONArray badges = response.optJSONArray("badges");
+                    bindAchievementsEntry(badges);
+                    try {
+                        final String newBadgeId = BadgePrefs.syncNewBadge(ProfileActivity.this, badges);
+                        if (newBadgeId != null) {
+                            final String label = BadgePrefs.labelForBadge(badges, newBadgeId);
+                            getWindow().getDecorView().post(() -> FeedbackHelper.celebrate(
+                                    ProfileActivity.this,
+                                    getString(R.string.badge_unlock_title),
+                                    label,
+                                    CelebrationActivity.VARIANT_BADGE,
+                                    null,
+                                    null,
+                                    null));
+                        }
+                    } catch (Exception badgeError) {
+                        Log.w(TAG, "Badge celebration skipped", badgeError);
+                    }
+
+                    bindQuizScores(response.optJSONArray("quiz_scores_by_subject"));
+                } catch (Exception e) {
+                    Log.e(TAG, "Profile response parse failed", e);
                     showProfileLoadFailed(null);
                 }
-        );
-        Volley.newRequestQueue(this).add(request);
+            }
+
+            @Override
+            public void onError(String message) {
+                setProfileLoading(false);
+                Log.e(TAG, "Profile request failed: " + message);
+                showProfileLoadFailed(message);
+            }
+        });
     }
 
     private void showProfileLoadFailed(String serverMessage) {

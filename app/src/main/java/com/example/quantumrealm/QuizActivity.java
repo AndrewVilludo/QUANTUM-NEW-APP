@@ -6,6 +6,7 @@ import android.os.CountDownTimer;
 import android.os.Handler;
 import android.os.Looper;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.Button;
 import android.widget.ProgressBar;
 import android.widget.RadioButton;
@@ -18,6 +19,7 @@ import androidx.appcompat.app.AlertDialog;
 import com.android.volley.Request;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
+import com.google.android.material.card.MaterialCardView;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -28,10 +30,12 @@ import java.util.List;
 public class QuizActivity extends LogoutAppCompatActivity {
 
     private TextView questionText, timerText, scoreText, quizProgressText;
+    private MaterialCardView questionCard;
     private ProgressBar quizProgressBar;
     private RadioGroup optionsGroup;
     private RadioButton optionA, optionB, optionC, optionD;
     private Button nextButton;
+    private ProgressBar quizLoading;
 
     private List<Question> questionList = new ArrayList<>();
     private int currentQuestionIndex = 0;
@@ -53,16 +57,19 @@ public class QuizActivity extends LogoutAppCompatActivity {
         scoreText = findViewById(R.id.scoreText);
         quizProgressText = findViewById(R.id.quizProgressText);
         quizProgressBar = findViewById(R.id.quizProgressBar);
+        questionCard = findViewById(R.id.questionCard);
         optionsGroup = findViewById(R.id.optionsGroup);
         optionA = findViewById(R.id.optionA);
         optionB = findViewById(R.id.optionB);
         optionC = findViewById(R.id.optionC);
         optionD = findViewById(R.id.optionD);
         nextButton = findViewById(R.id.nextButton);
+        quizLoading = findViewById(R.id.quizLoading);
 
         int lessonId = getIntent().getIntExtra("lesson_id", -1);
 
         if (lessonId != -1) {
+            setQuizLoading(true);
             fetchQuizData(lessonId);
         } else {
             Toast.makeText(this, "Invalid lesson ID", Toast.LENGTH_SHORT).show();
@@ -104,6 +111,34 @@ public class QuizActivity extends LogoutAppCompatActivity {
         ModuleFlowHelper.navigateToLearningGalaxy(this);
     }
 
+    private void setQuizLoading(boolean loading) {
+        if (quizLoading != null) {
+            quizLoading.setVisibility(loading ? View.VISIBLE : View.GONE);
+        }
+        int contentVisibility = loading ? View.GONE : View.VISIBLE;
+        if (quizProgressText != null) {
+            quizProgressText.setVisibility(contentVisibility);
+        }
+        if (quizProgressBar != null) {
+            quizProgressBar.setVisibility(contentVisibility);
+        }
+        if (timerText != null) {
+            timerText.setVisibility(contentVisibility);
+        }
+        if (scoreText != null) {
+            scoreText.setVisibility(contentVisibility);
+        }
+        if (questionCard != null) {
+            questionCard.setVisibility(contentVisibility);
+        }
+        if (optionsGroup != null) {
+            optionsGroup.setVisibility(contentVisibility);
+        }
+        if (nextButton != null) {
+            nextButton.setVisibility(contentVisibility);
+        }
+    }
+
     private void fetchQuizData(int lessonId) {
         String url = ApiConfig.api("lesson-quizzes/" + lessonId);
 
@@ -128,19 +163,23 @@ public class QuizActivity extends LogoutAppCompatActivity {
                         }
 
                         if (!questionList.isEmpty()) {
+                            setQuizLoading(false);
                             showNextQuestion();
                         } else {
+                            setQuizLoading(false);
                             Toast.makeText(this, "No quizzes found for this lesson.", Toast.LENGTH_SHORT).show();
                             finish();
                         }
 
                     } catch (Exception e) {
                         e.printStackTrace();
+                        setQuizLoading(false);
                         Toast.makeText(this, "Failed to parse quiz data", Toast.LENGTH_SHORT).show();
                     }
                 },
                 error -> {
                     error.printStackTrace();
+                    setQuizLoading(false);
                     Toast.makeText(this, "Failed to fetch quiz data", Toast.LENGTH_SHORT).show();
                 });
 

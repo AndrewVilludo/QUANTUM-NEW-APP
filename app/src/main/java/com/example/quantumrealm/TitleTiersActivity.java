@@ -2,8 +2,8 @@ package com.example.quantumrealm;
 
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.Menu;
 import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
@@ -13,13 +13,12 @@ import android.widget.Toast;
 import androidx.appcompat.app.AlertDialog;
 import androidx.core.content.ContextCompat;
 
-import com.android.volley.Request;
-import com.android.volley.toolbox.Volley;
-
 import org.json.JSONArray;
 import org.json.JSONObject;
 
 public class TitleTiersActivity extends LogoutAppCompatActivity {
+
+    private static final String TAG = "TitleTiersActivity";
 
     public static final String EXTRA_RANK_LADDER = "rank_ladder_json";
 
@@ -29,6 +28,7 @@ public class TitleTiersActivity extends LogoutAppCompatActivity {
 
     private LinearLayout container;
     private TextView subtitle;
+    private ProgressBar titleTiersLoading;
     private JSONArray xpRewardLines = new JSONArray();
 
     @Override
@@ -39,11 +39,13 @@ public class TitleTiersActivity extends LogoutAppCompatActivity {
 
         container = findViewById(R.id.titleTiersContainer);
         subtitle = findViewById(R.id.titleTiersSubtitle);
+        titleTiersLoading = findViewById(R.id.titleTiersLoading);
 
         String ladderJson = getIntent().getStringExtra(EXTRA_RANK_LADDER);
         if (!TextUtils.isEmpty(ladderJson)) {
             bindFromLadder(ladderJson);
         } else {
+            setLoading(true);
             loadFromApi();
         }
     }
@@ -56,43 +58,60 @@ public class TitleTiersActivity extends LogoutAppCompatActivity {
         }
     }
 
+    private void setLoading(boolean loading) {
+        if (titleTiersLoading != null) {
+            titleTiersLoading.setVisibility(loading ? View.VISIBLE : View.GONE);
+        }
+    }
+
     private void loadFromApi() {
-        AuthenticatedJsonObjectRequest request = new AuthenticatedJsonObjectRequest(
-                this,
-                Request.Method.GET,
-                ApiConfig.api("student-profile"),
-                null,
-                response -> {
-                    try {
-                        if (!response.optBoolean("success", false)) {
-                            Toast.makeText(this, R.string.profile_load_failed, Toast.LENGTH_SHORT).show();
-                            finish();
-                            return;
-                        }
-                        JSONObject dashboard = response.optJSONObject("dashboard");
-                        JSONObject ladder = dashboard != null ? dashboard.optJSONObject("rank_ladder") : null;
-                        if (ladder == null) {
-                            Toast.makeText(this, R.string.title_tiers_empty, Toast.LENGTH_SHORT).show();
-                            finish();
-                            return;
-                        }
-                        bindFromLadder(ladder.toString());
-                    } catch (Exception e) {
-                        Toast.makeText(this, R.string.profile_load_failed, Toast.LENGTH_SHORT).show();
-                        finish();
-                    }
-                },
-                error -> {
-                    Toast.makeText(this, R.string.profile_load_failed, Toast.LENGTH_SHORT).show();
-                    finish();
+        StudentProfileClient.fetch(this, new StudentProfileClient.Callback() {
+            @Override
+            public void onSuccess(JSONObject response) {
+                setLoading(false);
+                JSONObject ladder = extractRankLadder(response);
+                if (ladder == null) {
+                    showLoadError(null);
+                    return;
                 }
-        );
-        Volley.newRequestQueue(this).add(request);
+                bindFromLadder(ladder);
+            }
+
+            @Override
+            public void onError(String message) {
+                setLoading(false);
+                Log.e(TAG, "Title tiers load failed: " + message);
+                showLoadError(message);
+            }
+        });
+    }
+
+    private static JSONObject extractRankLadder(JSONObject response) {
+        JSONObject topLevel = response.optJSONObject("rank_ladder");
+        if (topLevel != null) {
+            return topLevel;
+        }
+        JSONObject dashboard = response.optJSONObject("dashboard");
+        if (dashboard != null) {
+            JSONObject fromDashboard = dashboard.optJSONObject("rank_ladder");
+            if (fromDashboard != null) {
+                return fromDashboard;
+            }
+        }
+        return null;
     }
 
     private void bindFromLadder(String ladderJson) {
         try {
-            JSONObject ladder = new JSONObject(ladderJson);
+            bindFromLadder(new JSONObject(ladderJson));
+        } catch (Exception e) {
+            Log.e(TAG, "Invalid rank ladder JSON", e);
+            showLoadError(null);
+        }
+    }
+
+    private void bindFromLadder(JSONObject ladder) {
+        try {
             JSONArray rewards = ladder.optJSONArray("xp_rewards");
             xpRewardLines = rewards != null ? rewards : new JSONArray();
 
@@ -101,7 +120,7 @@ public class TitleTiersActivity extends LogoutAppCompatActivity {
             container.removeAllViews();
             JSONArray bands = ladder.optJSONArray("title_bands");
             if (bands == null || bands.length() == 0) {
-                Toast.makeText(this, R.string.title_tiers_empty, Toast.LENGTH_SHORT).show();
+                showEmptyState();
                 return;
             }
 
@@ -113,18 +132,51 @@ public class TitleTiersActivity extends LogoutAppCompatActivity {
                 }
                 View card = inflateTierCard(inflater, band, i);
                 container.addView(card);
-                card.setAlpha(0f);
-                card.setTranslationY(24f);
-                card.animate()
-                        .alpha(1f)
-                        .translationY(0f)
-                        .setDuration(320)
-                        .setStartDelay(i * 60L)
-                        .start();
+                revealCard(card, i);
             }
         } catch (Exception e) {
-            Toast.makeText(this, R.string.profile_load_failed, Toast.LENGTH_SHORT).show();
+            Log.e(TAG, "Failed to bind title tiers", e);
+            showLoadError(null);
         }
+    }
+
+    private void revealCard(View card, int index) {
+        card.setAlpha(1f);
+        card.setTranslationY(16f);
+        card.animate()
+                .translationY(0f)
+                .setDuration(280)
+                .setStartDelay(index * 50L)
+                .start();
+    }
+
+    private void showEmptyState() {
+        container.removeAllViews();
+        TextView message = new TextView(this);
+        message.setText(R.string.title_tiers_empty);
+        message.setTextAppearance(R.style.TextAppearance_QuantumRealm_Subtitle);
+        int pad = (int) (16 * getResources().getDisplayMetrics().density);
+        message.setPadding(pad, pad, pad, pad);
+        container.addView(message);
+    }
+
+    private void showLoadError(String serverMessage) {
+        container.removeAllViews();
+        TextView message = new TextView(this);
+        message.setText(
+                serverMessage != null && !serverMessage.isEmpty()
+                        ? serverMessage
+                        : getString(R.string.title_tiers_load_failed));
+        message.setTextAppearance(R.style.TextAppearance_QuantumRealm_Subtitle);
+        int pad = (int) (16 * getResources().getDisplayMetrics().density);
+        message.setPadding(pad, pad, pad, pad);
+        container.addView(message);
+        Toast.makeText(
+                this,
+                serverMessage != null && !serverMessage.isEmpty()
+                        ? serverMessage
+                        : getString(R.string.title_tiers_load_failed),
+                Toast.LENGTH_LONG).show();
     }
 
     private View inflateTierCard(LayoutInflater inflater, JSONObject band, int index) {

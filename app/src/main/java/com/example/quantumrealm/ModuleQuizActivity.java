@@ -5,6 +5,7 @@ import android.os.CountDownTimer;
 import android.os.Handler;
 import android.os.Looper;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.Button;
 import android.widget.ProgressBar;
 import android.widget.RadioButton;
@@ -33,6 +34,7 @@ public class ModuleQuizActivity extends LogoutAppCompatActivity {
     private RadioGroup optionsGroup;
     private RadioButton optionA, optionB, optionC, optionD;
     private Button nextButton;
+    private ProgressBar quizLoading;
 
     private final List<Question> questionList = new ArrayList<>();
     private final Map<Integer, String> selectedByQuizId = new HashMap<>();
@@ -63,6 +65,7 @@ public class ModuleQuizActivity extends LogoutAppCompatActivity {
         optionC = findViewById(R.id.optionC);
         optionD = findViewById(R.id.optionD);
         nextButton = findViewById(R.id.nextButton);
+        quizLoading = findViewById(R.id.quizLoading);
 
         moduleId = getIntent().getIntExtra(ModuleFlowHelper.EXTRA_MODULE_ID, -1);
         subjectId = getIntent().getIntExtra(ModuleFlowHelper.EXTRA_SUBJECT_ID, -1);
@@ -74,6 +77,7 @@ public class ModuleQuizActivity extends LogoutAppCompatActivity {
 
         nextButton.setOnClickListener(v -> checkAnswer());
         exitGuard = new QuizExitGuard(this, this::discardAttemptAndExitToGalaxy);
+        setQuizLoading(true);
         loadModuleQuiz();
     }
 
@@ -108,6 +112,34 @@ public class ModuleQuizActivity extends LogoutAppCompatActivity {
         ModuleFlowHelper.navigateToLearningGalaxy(this);
     }
 
+    private void setQuizLoading(boolean loading) {
+        if (quizLoading != null) {
+            quizLoading.setVisibility(loading ? View.VISIBLE : View.GONE);
+        }
+        int contentVisibility = loading ? View.GONE : View.VISIBLE;
+        if (quizProgressText != null) {
+            quizProgressText.setVisibility(contentVisibility);
+        }
+        if (quizProgressBar != null) {
+            quizProgressBar.setVisibility(contentVisibility);
+        }
+        if (timerText != null) {
+            timerText.setVisibility(contentVisibility);
+        }
+        if (scoreText != null) {
+            scoreText.setVisibility(contentVisibility);
+        }
+        if (questionCard != null) {
+            questionCard.setVisibility(contentVisibility);
+        }
+        if (optionsGroup != null) {
+            optionsGroup.setVisibility(contentVisibility);
+        }
+        if (nextButton != null) {
+            nextButton.setVisibility(contentVisibility);
+        }
+    }
+
     private void loadModuleQuiz() {
         AuthenticatedJsonObjectRequest request = new AuthenticatedJsonObjectRequest(
                 this,
@@ -117,11 +149,13 @@ public class ModuleQuizActivity extends LogoutAppCompatActivity {
                 response -> {
                     try {
                         if (!response.optBoolean("success", false)) {
+                            setQuizLoading(false);
                             Toast.makeText(this, response.optString("message", "Quiz locked"), Toast.LENGTH_LONG).show();
                             finish();
                             return;
                         }
                         if (response.optBoolean("already_passed", false)) {
+                            setQuizLoading(false);
                             Toast.makeText(this, "You already passed this module quiz.", Toast.LENGTH_SHORT).show();
                             ModuleFlowHelper.backToCourse(this, subjectId);
                             finish();
@@ -142,17 +176,21 @@ public class ModuleQuizActivity extends LogoutAppCompatActivity {
                             ));
                         }
                         if (questionList.isEmpty()) {
+                            setQuizLoading(false);
                             Toast.makeText(this, "No module quiz questions yet.", Toast.LENGTH_SHORT).show();
                             finish();
                             return;
                         }
+                        setQuizLoading(false);
                         showNextQuestion();
                     } catch (Exception e) {
+                        setQuizLoading(false);
                         Toast.makeText(this, "Failed to parse module quiz", Toast.LENGTH_SHORT).show();
                         finish();
                     }
                 },
                 error -> {
+                    setQuizLoading(false);
                     Toast.makeText(this, "Failed to load module quiz", Toast.LENGTH_SHORT).show();
                     finish();
                 }

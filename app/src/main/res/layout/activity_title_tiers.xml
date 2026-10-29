@@ -28,6 +28,15 @@
         android:layout_marginTop="6dp"
         android:textAppearance="@style/TextAppearance.QuantumRealm.Subtitle" />
 
+    <ProgressBar
+        android:id="@+id/titleTiersLoading"
+        style="?android:attr/progressBarStyle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="16dp"
+        android:visibility="gone" />
+
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="0dp"

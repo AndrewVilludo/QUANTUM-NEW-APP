@@ -64,7 +64,6 @@ public class CourseActivity extends LogoutAppCompatActivity {
     }
 
     private void loadModulePath() {
-        moduleContainer.removeAllViews();
         fetchModulesFromApi(subjectId);
         fetchSubjectProgress(subjectId);
     }
