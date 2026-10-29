@@ -1,7 +1,6 @@
 package com.example.quantumrealm;
 
 import android.content.Context;
-import android.media.ToneGenerator;
 import android.os.Build;
 import android.os.VibrationEffect;
 import android.os.Vibrator;
@@ -20,16 +19,12 @@ public final class CelebrationEffects {
                 || CelebrationActivity.VARIANT_GRADUATE.equals(variant)) {
             anchor.performHapticFeedback(HapticFeedbackConstants.CONFIRM);
             vibratePattern(context, new long[]{0, 40, 80, 60});
-            CelebrationSound.playLevelUp(context);
         } else if (CelebrationActivity.VARIANT_QUIZ_PASS.equals(variant)) {
             anchor.performHapticFeedback(HapticFeedbackConstants.CONFIRM);
-            CelebrationSound.playQuizComplete(context);
         } else if (CelebrationActivity.VARIANT_BADGE.equals(variant)) {
             anchor.performHapticFeedback(HapticFeedbackConstants.CONTEXT_CLICK);
-            CelebrationSound.playSuccess(context);
         } else {
             anchor.performHapticFeedback(HapticFeedbackConstants.CONFIRM);
-            CelebrationSound.playSuccess(context);
         }
     }
 
@@ -37,7 +32,6 @@ public final class CelebrationEffects {
         if (anchor != null) {
             anchor.performHapticFeedback(HapticFeedbackConstants.CONFIRM);
         }
-        CelebrationSound.playSuccess(anchor != null ? anchor.getContext() : null);
     }
 
     public static void quizWrong(View anchor) {

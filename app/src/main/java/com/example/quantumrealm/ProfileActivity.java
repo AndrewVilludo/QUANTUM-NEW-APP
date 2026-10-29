@@ -21,7 +21,6 @@ import androidx.appcompat.app.AlertDialog;
 
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.card.MaterialCardView;
-import com.google.android.material.switchmaterial.SwitchMaterial;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -47,7 +46,6 @@ public class ProfileActivity extends LogoutAppCompatActivity {
     private JSONArray badgesSnapshot = new JSONArray();
     private MaterialButton continueQuestButton;
     private MaterialButton certificateButton;
-    private SwitchMaterial sfxSwitch;
     private JSONObject continueQuest;
     private JSONArray xpRewardLines = new JSONArray();
     private JSONObject nextLevelSnapshot;
@@ -77,10 +75,6 @@ public class ProfileActivity extends LogoutAppCompatActivity {
         achievementsEntry = findViewById(R.id.profileAchievementsEntry);
         achievementsSummary = findViewById(R.id.profileAchievementsSummary);
         continueQuestButton = findViewById(R.id.profileContinueQuestButton);
-        sfxSwitch = findViewById(R.id.profileSfxSwitch);
-        sfxSwitch.setChecked(CelebrationSound.isSfxEnabled(this));
-        sfxSwitch.setOnCheckedChangeListener((button, checked) ->
-                CelebrationSound.setSfxEnabled(this, checked));
 
         continueQuestButton.setOnClickListener(v ->
                 ModuleFlowHelper.continueQuestFromDashboard(this, continueQuest));

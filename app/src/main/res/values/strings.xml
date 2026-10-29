@@ -119,7 +119,6 @@
     <string name="celebration_review_answers">Review answers</string>
     <string name="quiz_streak_on_fire">On fire! 3 in a row!</string>
     <string name="quiz_streak_unstoppable">Unstoppable! 5 in a row!</string>
-    <string name="profile_sfx_label">Celebration sound effects</string>
     <string name="profile_achievements_heading">Achievement badges</string>
     <string name="profile_achievements_open">View all ›</string>
     <string name="profile_achievements_summary">%1$d / %2$d unlocked</string>
