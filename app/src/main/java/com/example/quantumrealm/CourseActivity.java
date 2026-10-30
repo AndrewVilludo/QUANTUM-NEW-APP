@@ -21,6 +21,7 @@ public class CourseActivity extends LogoutAppCompatActivity {
     private LinearLayout moduleContainer;
     private TextView courseTitleTextView;
     private TextView courseMissionText;
+    private TextView courseCompleteBadge;
     private SwipeRefreshLayout courseSwipeRefresh;
 
     private static final String BASE_URL = ApiConfig.api("subject-modules/");
@@ -36,6 +37,7 @@ public class CourseActivity extends LogoutAppCompatActivity {
 
         courseTitleTextView = findViewById(R.id.courseTitleTextView);
         courseMissionText = findViewById(R.id.courseMissionText);
+        courseCompleteBadge = findViewById(R.id.courseCompleteBadge);
         courseSwipeRefresh = findViewById(R.id.courseSwipeRefresh);
         moduleContainer = findViewById(R.id.moduleContainer);
         requestQueue = Volley.newRequestQueue(this);
@@ -64,8 +66,11 @@ public class CourseActivity extends LogoutAppCompatActivity {
     }
 
     private void loadModulePath() {
+        moduleContainer.removeAllViews();
+        if (courseCompleteBadge != null) {
+            courseCompleteBadge.setVisibility(View.GONE);
+        }
         fetchModulesFromApi(subjectId);
-        fetchSubjectProgress(subjectId);
     }
 
     private void fetchSubjectProgress(int subjectId) {
@@ -77,14 +82,33 @@ public class CourseActivity extends LogoutAppCompatActivity {
                 response -> {
                     try {
                         JSONObject data = response.getJSONObject("data");
-                        if (data.optBoolean("final_quiz_unlocked", false) && !data.optBoolean("final_quiz_passed", false)) {
+                        boolean finalPassed = data.optBoolean("final_quiz_passed", false);
+                        boolean finalUnlocked = data.optBoolean("final_quiz_unlocked", false);
+
+                        if (courseCompleteBadge != null) {
+                            courseCompleteBadge.setVisibility(finalPassed ? View.VISIBLE : View.GONE);
+                        }
+
+                        if (finalPassed) {
                             moduleContainer.addView(UiHelper.inflatePathCard(
                                     this,
                                     moduleContainer,
-                                    "Final subject quiz",
-                                    "30 questions from all modules — need 70% to pass",
+                                    getString(R.string.subject_final_quiz_title),
+                                    getString(R.string.subject_final_passed_subtitle),
                                     "🏆",
                                     false,
+                                    true,
+                                    () -> Toast.makeText(
+                                            this,
+                                            R.string.subject_final_passed_toast,
+                                            Toast.LENGTH_SHORT
+                                    ).show()
+                            ));
+                        } else if (finalUnlocked) {
+                            moduleContainer.addView(UiHelper.inflatePathBossCard(
+                                    this,
+                                    moduleContainer,
+                                    getString(R.string.subject_final_quiz_title),
                                     () -> {
                                         Intent intent = new Intent(CourseActivity.this, SubjectFinalQuizActivity.class);
                                         intent.putExtra("subject_id", subjectId);
@@ -165,6 +189,8 @@ public class CourseActivity extends LogoutAppCompatActivity {
                                 ));
                             }
                         }
+
+                        fetchSubjectProgress(subjectId);
 
                     } catch (Exception e) {
                         Toast.makeText(this, "Error parsing modules: " + e.getMessage(), Toast.LENGTH_SHORT).show();

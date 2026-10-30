@@ -18,13 +18,27 @@
         android:orientation="horizontal"
         android:padding="16dp">
 
-        <TextView
-            android:id="@+id/pathEmoji"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:gravity="center"
-            android:text="📘"
-            android:textSize="22sp" />
+        <FrameLayout
+            android:layout_width="48dp"
+            android:layout_height="48dp">
+
+            <TextView
+                android:id="@+id/pathEmoji"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:text="📘"
+                android:textSize="22sp" />
+
+            <com.airbnb.lottie.LottieAnimationView
+                android:id="@+id/pathCurrentLottie"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:visibility="gone"
+                app:lottie_autoPlay="true"
+                app:lottie_loop="true"
+                app:lottie_rawRes="@raw/blue_circle" />
+        </FrameLayout>
 
         <LinearLayout
             android:layout_width="0dp"
@@ -47,6 +61,21 @@
                     android:textAppearance="@style/TextAppearance.QuantumRealm.Title"
                     android:textSize="18sp"
                     tools:text="Introduction to Computing" />
+
+                <TextView
+                    android:id="@+id/pathCurrentBadge"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:background="@drawable/module_completed_badge"
+                    android:paddingHorizontal="8dp"
+                    android:paddingVertical="4dp"
+                    android:text="@string/lesson_status_current"
+                    android:textAllCaps="true"
+                    android:textColor="@color/game_accent"
+                    android:textSize="10sp"
+                    android:textStyle="bold"
+                    android:visibility="gone" />
 
                 <TextView
                     android:id="@+id/pathCompletedBadge"

@@ -26,6 +26,8 @@ import org.json.JSONObject;
 
 public class MainActivity extends AppCompatActivity {
 
+    public static final String EXTRA_PREFILL_EMAIL = "extra_prefill_email";
+
     private EditText loginEmail;
     private EditText loginPassword;
     private MaterialButton loginButton;
@@ -57,6 +59,10 @@ public class MainActivity extends AppCompatActivity {
         }
 
         loginEmail = findViewById(R.id.login_email);
+        String prefillEmail = getIntent().getStringExtra(EXTRA_PREFILL_EMAIL);
+        if (prefillEmail != null && !prefillEmail.isEmpty()) {
+            loginEmail.setText(prefillEmail);
+        }
         loginPassword = findViewById(R.id.login_password);
         loginButton = findViewById(R.id.login_button);
         goRegister = findViewById(R.id.go_register);
@@ -133,6 +139,8 @@ public class MainActivity extends AppCompatActivity {
 
     private void loginUser(String email, String password) {
         setLoginLoading(true);
+        final String loginEmailValue = email;
+        final String loginPasswordValue = password;
         try {
             JSONObject json = new JSONObject();
             json.put("email", email);
@@ -152,6 +160,7 @@ public class MainActivity extends AppCompatActivity {
                                     JSONObject user = response.getJSONObject("user");
                                     AuthHelper.saveUserName(MainActivity.this, user.optString("name", ""));
                                 }
+                                AuthHelper.refreshRankTitleFromServer(MainActivity.this, null);
 
                                 runOnUiThread(() -> {
                                     setLoginLoading(false);
@@ -178,6 +187,17 @@ public class MainActivity extends AppCompatActivity {
                         Log.e("API_ERROR", "Request failed: " + error.toString());
                         runOnUiThread(() -> {
                             setLoginLoading(false);
+                            if (VolleyErrorHelper.isEmailVerificationRequired(error)) {
+                                Intent intent = new Intent(MainActivity.this, VerifyEmailActivity.class);
+                                intent.putExtra(VerifyEmailActivity.EXTRA_EMAIL, loginEmailValue);
+                                intent.putExtra(VerifyEmailActivity.EXTRA_PASSWORD, loginPasswordValue);
+                                startActivity(intent);
+                                overridePendingTransition(
+                                        R.anim.auth_slide_in_right,
+                                        R.anim.auth_slide_out_left
+                                );
+                                return;
+                            }
                             showFieldError(
                                     loginFormError,
                                     VolleyErrorHelper.message(

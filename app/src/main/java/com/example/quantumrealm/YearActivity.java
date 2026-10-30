@@ -18,10 +18,10 @@ public class YearActivity extends LogoutAppCompatActivity {
     private LinearLayout courseContainer;
     private TextView yearTitleTextView;
 
-    // Base URL for API
     private static final String BASE_URL = ApiConfig.api("subjects/");
 
     private RequestQueue requestQueue;
+    private int yearId;
 
     public static void unlockSubject(MiniGame miniGame, String userEmail, int nextSubjectId) {
     }
@@ -38,23 +38,27 @@ public class YearActivity extends LogoutAppCompatActivity {
         courseContainer = findViewById(R.id.courseContainer);
         requestQueue = Volley.newRequestQueue(this);
 
-        // Retrieve year information from the Intent
         Intent intent = getIntent();
-        int yearId = intent.getIntExtra("year_id", 0);
+        yearId = intent.getIntExtra("year_id", 0);
         String yearName = intent.getStringExtra("year_name");
 
-        // Display the year name on the screen
         yearTitleTextView.setText(yearName);
+    }
 
-        // Fetch courses for the selected year
+    @Override
+    protected void onResume() {
+        super.onResume();
+        loadSubjects();
+    }
+
+    private void loadSubjects() {
+        courseContainer.removeAllViews();
         fetchCoursesFromApi(yearId);
     }
 
-    // Fetch courses for the selected year from the API
     private void fetchCoursesFromApi(int yearId) {
         String url = BASE_URL + yearId;
 
-        // Create the API request
         AuthenticatedJsonObjectRequest request = new AuthenticatedJsonObjectRequest(
                 this,
                 Request.Method.GET, url, null,
@@ -64,29 +68,35 @@ public class YearActivity extends LogoutAppCompatActivity {
                             Toast.makeText(this, response.optString("message", "Could not load subjects."), Toast.LENGTH_LONG).show();
                             return;
                         }
-                        // Parse the response JSON to extract courses data
                         JSONArray courses = response.getJSONArray("data");
 
                         for (int i = 0; i < courses.length(); i++) {
                             JSONObject course = courses.getJSONObject(i);
 
-                            // If the course belongs to the selected year, create a button for it
                             if (course.getInt("year_id") == yearId) {
                                 String courseName = course.getString("name");
                                 int courseId = course.getInt("id");
                                 String mission = course.optString("mission", "");
+                                boolean finalPassed = course.optBoolean("final_quiz_passed", false);
 
                                 int index = courseContainer.getChildCount();
-                                String subtitle = mission.isEmpty()
-                                        ? "Subject quest · tap to open"
-                                        : mission;
+                                String subtitle;
+                                if (finalPassed) {
+                                    subtitle = getString(R.string.subject_final_passed_subtitle);
+                                } else if (mission.isEmpty()) {
+                                    subtitle = "Subject quest · tap to open";
+                                } else {
+                                    subtitle = mission;
+                                }
+
                                 courseContainer.addView(UiHelper.inflatePathCard(
                                         this,
                                         courseContainer,
                                         courseName,
                                         subtitle,
-                                        UiHelper.emojiForIndex(index),
+                                        finalPassed ? "✅" : UiHelper.emojiForIndex(index),
                                         false,
+                                        finalPassed,
                                         () -> openCourseActivity(courseId, courseName, mission)
                                 ));
                             }
@@ -111,17 +121,15 @@ public class YearActivity extends LogoutAppCompatActivity {
                 }
         );
 
-        // Add the request to the request queue
         requestQueue.add(request);
     }
 
-    // Open the CourseActivity with the selected course's ID and name
     private void openCourseActivity(int courseId, String courseName, String mission) {
         Intent intent = new Intent(this, CourseActivity.class);
         intent.putExtra("course_id", courseId);
         intent.putExtra("course_name", courseName);
         intent.putExtra("course_mission", mission);
-        intent.putExtra("year_id", getIntent().getIntExtra("year_id", 0));
+        intent.putExtra("year_id", yearId);
         startActivity(intent);
     }
 }

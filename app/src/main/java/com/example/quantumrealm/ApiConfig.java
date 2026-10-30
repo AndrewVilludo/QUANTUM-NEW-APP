@@ -45,4 +45,20 @@ public final class ApiConfig {
         }
         return alternate + fullUrl.substring(BASE_URL.length());
     }
+
+    /** Maps a CMS URL from the server (often 127.0.0.1) to this device's reachable host. */
+    public static String rewriteCmsUrlForDevice(String fullUrl) {
+        if (fullUrl == null || fullUrl.isEmpty()) {
+            return BASE_URL;
+        }
+        int schemeEnd = fullUrl.indexOf("://");
+        if (schemeEnd < 0) {
+            return BASE_URL + (fullUrl.startsWith("/") ? fullUrl : "/" + fullUrl);
+        }
+        int pathStart = fullUrl.indexOf('/', schemeEnd + 3);
+        if (pathStart < 0) {
+            return BASE_URL;
+        }
+        return BASE_URL + fullUrl.substring(pathStart);
+    }
 }

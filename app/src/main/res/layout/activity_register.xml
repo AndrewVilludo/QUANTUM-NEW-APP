@@ -152,6 +152,13 @@
                         android:inputType="textPersonName|textCapWords" />
                 </com.google.android.material.textfield.TextInputLayout>
 
+                <TextView
+                    android:id="@+id/register_name_error"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="@style/TextAppearance.QuantumRealm.AuthError"
+                    android:visibility="gone" />
+
                 <com.google.android.material.textfield.TextInputLayout
                     android:id="@+id/email_layout"
                     style="@style/Widget.QuantumRealm.TextInputLayout.Auth"

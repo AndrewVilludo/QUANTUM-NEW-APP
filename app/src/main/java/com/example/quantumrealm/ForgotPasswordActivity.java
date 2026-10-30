@@ -1,6 +1,7 @@
 package com.example.quantumrealm;
 
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -15,7 +16,6 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
-import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.button.MaterialButton;
@@ -39,8 +39,11 @@ public class ForgotPasswordActivity extends AppCompatActivity {
     private MaterialCardView formCard;
     private MaterialCardView successCard;
     private TextView successMessage;
+    private TextView cmsPathHint;
+    private MaterialButton openCmsButton;
     private TextView mailhogHint;
     private RequestQueue requestQueue;
+    private String cmsForgotPasswordUrl;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -68,6 +71,8 @@ public class ForgotPasswordActivity extends AppCompatActivity {
         formCard = findViewById(R.id.forgot_form_card);
         successCard = findViewById(R.id.forgot_success_card);
         successMessage = findViewById(R.id.forgot_success_message);
+        cmsPathHint = findViewById(R.id.forgot_cms_path_hint);
+        openCmsButton = findViewById(R.id.forgot_open_cms_button);
         mailhogHint = findViewById(R.id.forgot_mailhog_hint);
 
         String prefilledEmail = getIntent().getStringExtra(EXTRA_EMAIL);
@@ -89,6 +94,16 @@ public class ForgotPasswordActivity extends AppCompatActivity {
             overridePendingTransition(R.anim.auth_slide_in_left, R.anim.auth_slide_out_right);
             finish();
         });
+
+        openCmsButton.setOnClickListener(v -> openCmsForgotPasswordPage());
+    }
+
+    private void openCmsForgotPasswordPage() {
+        String url = cmsForgotPasswordUrl != null && !cmsForgotPasswordUrl.isEmpty()
+                ? ApiConfig.rewriteCmsUrlForDevice(cmsForgotPasswordUrl)
+                : ApiConfig.rewriteCmsUrlForDevice(ApiConfig.BASE_URL + "/forgot-password");
+        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+        startActivity(intent);
     }
 
     private void submitResetRequest() {
@@ -109,10 +124,12 @@ public class ForgotPasswordActivity extends AppCompatActivity {
             JSONObject json = new JSONObject();
             json.put("email", email);
 
-            JsonObjectRequest request = new JsonObjectRequest(
+            HostFallbackJsonObjectRequest request = new HostFallbackJsonObjectRequest(
+                    this,
                     Request.Method.POST, FORGOT_PASSWORD_URL, json,
                     response -> runOnUiThread(() -> {
                         setLoading(false);
+                        cmsForgotPasswordUrl = response.optString("forgot_password_url", "");
                         showSuccessState(response.optString(
                                 "message",
                                 getString(R.string.auth_forgot_success_body)
@@ -120,14 +137,16 @@ public class ForgotPasswordActivity extends AppCompatActivity {
                     }),
                     error -> runOnUiThread(() -> {
                         setLoading(false);
-                        showFieldError(
-                                formError,
-                                VolleyErrorHelper.message(
-                                        ForgotPasswordActivity.this,
-                                        error,
-                                        R.string.auth_forgot_error_generic
-                                )
+                        String msg = VolleyErrorHelper.message(
+                                ForgotPasswordActivity.this,
+                                error,
+                                R.string.auth_forgot_error_generic
                         );
+                        if (error.networkResponse != null && error.networkResponse.statusCode == 422) {
+                            showFieldError(emailError, msg);
+                        } else {
+                            showFieldError(formError, msg);
+                        }
                     })
             );
 
@@ -144,6 +163,14 @@ public class ForgotPasswordActivity extends AppCompatActivity {
         successCard.setVisibility(View.VISIBLE);
         sendButton.setEnabled(false);
         emailField.setEnabled(false);
+
+        String deviceCmsBase = ApiConfig.rewriteCmsUrlForDevice(
+                cmsForgotPasswordUrl != null && !cmsForgotPasswordUrl.isEmpty()
+                        ? cmsForgotPasswordUrl
+                        : ApiConfig.BASE_URL + "/forgot-password");
+        cmsPathHint.setText(getString(R.string.auth_forgot_cms_path_hint, deviceCmsBase + "/reset-password/…"));
+        cmsPathHint.setVisibility(View.VISIBLE);
+        openCmsButton.setVisibility(View.VISIBLE);
 
         androidx.constraintlayout.widget.ConstraintLayout.LayoutParams params =
                 (androidx.constraintlayout.widget.ConstraintLayout.LayoutParams) goLogin.getLayoutParams();

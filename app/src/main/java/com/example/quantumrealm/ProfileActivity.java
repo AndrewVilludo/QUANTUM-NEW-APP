@@ -294,6 +294,7 @@ public class ProfileActivity extends LogoutAppCompatActivity {
                     R.string.profile_rank_format,
                     rank.optString("title", ""),
                     rank.optInt("level", 1)));
+            AuthHelper.saveRankTitle(this, rank.optString("title", ""));
             int xpInLevel = rank.optInt("xp_in_level", 0);
             int xpForNext = Math.max(1, rank.optInt("xp_for_next_level", 1));
             rankProgressBar.setProgress(xpForNext == 0 ? 0 : (xpInLevel * 100 / xpForNext));

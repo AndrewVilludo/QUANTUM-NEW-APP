@@ -19,7 +19,6 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
-import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.button.MaterialButton;
@@ -39,6 +38,7 @@ public class Register extends AppCompatActivity {
     private String[] yearLevels;
     private String selectedYearLevel = "";
     private TextView registerFormError;
+    private TextView registerNameError;
     private TextView registerEmailError;
     private TextView registerPasswordError;
     private TextView registerYearError;
@@ -72,21 +72,28 @@ public class Register extends AppCompatActivity {
         buttonRegister = findViewById(R.id.register_button);
         goLogin = findViewById(R.id.go_login);
         registerFormError = findViewById(R.id.register_form_error);
+        registerNameError = findViewById(R.id.register_name_error);
         registerEmailError = findViewById(R.id.register_email_error);
         registerPasswordError = findViewById(R.id.register_password_error);
         registerYearError = findViewById(R.id.register_year_error);
         registerProgress = findViewById(R.id.register_progress);
 
         TextWatcher clearErrorsWatcher = new SimpleTextWatcher(this::clearRegisterErrors);
-        editTextUsername.addTextChangedListener(clearErrorsWatcher);
         editTextEmail.addTextChangedListener(clearErrorsWatcher);
-        editTextPassword.addTextChangedListener(clearErrorsWatcher);
         editTextConfirmPassword.addTextChangedListener(clearErrorsWatcher);
+
+        editTextUsername.addTextChangedListener(new SimpleTextWatcher(this::validateNameFieldLive));
+        editTextPassword.addTextChangedListener(new SimpleTextWatcher(this::validatePasswordFieldLive));
+
         buttonRegister.setOnClickListener(v -> {
             String username = editTextUsername.getText().toString().trim();
             String email = editTextEmail.getText().toString().trim();
-            String password = editTextPassword.getText().toString().trim();
-            String confirmPassword = editTextConfirmPassword.getText().toString().trim();
+            String password = editTextPassword.getText() != null
+                    ? editTextPassword.getText().toString()
+                    : "";
+            String confirmPassword = editTextConfirmPassword.getText() != null
+                    ? editTextConfirmPassword.getText().toString()
+                    : "";
             clearRegisterErrors();
 
             String yearLevel = resolveSelectedYearLevel();
@@ -100,6 +107,18 @@ public class Register extends AppCompatActivity {
             }
             if (username.isEmpty() || email.isEmpty() || password.isEmpty() || confirmPassword.isEmpty()) {
                 showFieldError(registerFormError, getString(R.string.auth_error_fields_required));
+                return;
+            }
+            if (RegistrationValidation.containsDigit(username)
+                    || !RegistrationValidation.isValidName(username)) {
+                validateNameFieldLive();
+                return;
+            }
+            if (!RegistrationValidation.isPasswordLongEnough(password)) {
+                showFieldError(
+                        registerPasswordError,
+                        getString(R.string.auth_error_password_min_length)
+                );
                 return;
             }
             if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
@@ -173,8 +192,58 @@ public class Register extends AppCompatActivity {
         return false;
     }
 
+    private void validateNameFieldLive() {
+        Editable editable = editTextUsername.getText();
+        if (editable == null) {
+            return;
+        }
+        String value = editable.toString();
+        if (value.isEmpty()) {
+            hideFieldError(registerNameError);
+            return;
+        }
+        if (RegistrationValidation.containsDigit(value)) {
+            showFieldError(registerNameError, getString(R.string.auth_error_name_numbers));
+            String cleaned = RegistrationValidation.stripDigits(value);
+            if (!cleaned.equals(value)) {
+                editTextUsername.setText(cleaned);
+                editTextUsername.setSelection(cleaned.length());
+            }
+            return;
+        }
+        if (!RegistrationValidation.isValidName(value)) {
+            showFieldError(registerNameError, getString(R.string.auth_error_name_invalid));
+            String cleaned = RegistrationValidation.stripInvalidNameChars(value);
+            if (!cleaned.equals(value)) {
+                editTextUsername.setText(cleaned);
+                editTextUsername.setSelection(cleaned.length());
+            }
+            return;
+        }
+        hideFieldError(registerNameError);
+    }
+
+    private void validatePasswordFieldLive() {
+        String password = editTextPassword.getText() != null
+                ? editTextPassword.getText().toString()
+                : "";
+        if (password.isEmpty()) {
+            hideFieldError(registerPasswordError);
+            return;
+        }
+        if (!RegistrationValidation.isPasswordLongEnough(password)) {
+            showFieldError(
+                    registerPasswordError,
+                    getString(R.string.auth_error_password_min_length)
+            );
+        } else {
+            hideFieldError(registerPasswordError);
+        }
+    }
+
     private void clearRegisterErrors() {
         hideFieldError(registerFormError);
+        hideFieldError(registerNameError);
         hideFieldError(registerEmailError);
         hideFieldError(registerPasswordError);
         hideFieldError(registerYearError);
@@ -208,28 +277,44 @@ public class Register extends AppCompatActivity {
             json.put("password_confirmation", confirmPassword);
             json.put("year_level", yearLevel);
 
-            JsonObjectRequest request = new JsonObjectRequest(
+            HostFallbackJsonObjectRequest request = new HostFallbackJsonObjectRequest(
+                    Register.this,
                     Request.Method.POST, REGISTER_URL, json,
                     response -> {
                         setRegisterLoading(false);
-                        String message = response.optString("message", "Registered successfully");
-                        Toast.makeText(Register.this, message, Toast.LENGTH_SHORT).show();
+                        String message = response.optString(
+                                "message",
+                                getString(R.string.auth_verify_sent)
+                        );
+                        Toast.makeText(Register.this, message, Toast.LENGTH_LONG).show();
 
-                        Intent intent = new Intent(Register.this, MainActivity.class);
+                        Intent intent = new Intent(Register.this, VerifyEmailActivity.class);
+                        intent.putExtra(VerifyEmailActivity.EXTRA_EMAIL, email);
+                        intent.putExtra(VerifyEmailActivity.EXTRA_PASSWORD, password);
                         startActivity(intent);
-                        overridePendingTransition(R.anim.auth_slide_in_left, R.anim.auth_slide_out_right);
+                        overridePendingTransition(R.anim.auth_slide_in_right, R.anim.auth_slide_out_left);
                         finish();
                     },
                     error -> {
                         setRegisterLoading(false);
-                        showFieldError(
-                                registerFormError,
-                                VolleyErrorHelper.message(
-                                        Register.this,
-                                        error,
-                                        R.string.auth_error_register_failed
-                                )
+                        String msg = VolleyErrorHelper.message(
+                                Register.this,
+                                error,
+                                R.string.auth_error_register_failed
                         );
+                        if (error.networkResponse != null && error.networkResponse.statusCode == 422) {
+                            if (msg.toLowerCase().contains("name")) {
+                                showFieldError(registerNameError, msg);
+                            } else if (msg.toLowerCase().contains("password")) {
+                                showFieldError(registerPasswordError, msg);
+                            } else if (msg.toLowerCase().contains("email")) {
+                                showFieldError(registerEmailError, msg);
+                            } else {
+                                showFieldError(registerFormError, msg);
+                            }
+                        } else {
+                            showFieldError(registerFormError, msg);
+                        }
                     }
             );
 

@@ -19,6 +19,7 @@ import com.android.volley.toolbox.Volley;
 import androidx.core.content.ContextCompat;
 
 import com.google.android.material.card.MaterialCardView;
+import com.google.android.material.navigation.NavigationView;
 
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
@@ -52,6 +53,18 @@ public class Journey extends LogoutAppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
+        NavigationView navView = findViewById(R.id.app_nav_view);
+        if (navView != null) {
+            AppDrawerHelper.refreshHeader(this, navView);
+        }
+        if (AuthHelper.shouldSyncRankTitle(this, 60_000L)) {
+            AuthHelper.refreshRankTitleFromServer(this, () -> {
+                NavigationView nav = findViewById(R.id.app_nav_view);
+                if (nav != null) {
+                    AppDrawerHelper.refreshHeader(Journey.this, nav);
+                }
+            });
+        }
         loadGalaxyYears();
     }
 

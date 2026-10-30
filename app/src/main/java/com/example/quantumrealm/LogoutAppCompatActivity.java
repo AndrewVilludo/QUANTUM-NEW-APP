@@ -53,6 +53,7 @@ public abstract class LogoutAppCompatActivity extends AppCompatActivity {
         }
         NavigationView navView = findViewById(R.id.app_nav_view);
         if (navView != null) {
+            AppDrawerHelper.refreshHeader(this, navView);
             AppDrawerHelper.highlightCurrentDestination(this, navView);
         }
         if (drawerToggle != null) {

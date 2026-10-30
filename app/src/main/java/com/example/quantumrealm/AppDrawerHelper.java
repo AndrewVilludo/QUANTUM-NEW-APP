@@ -37,6 +37,10 @@ public final class AppDrawerHelper {
         });
     }
 
+    public static void refreshHeader(AppCompatActivity activity, NavigationView navigationView) {
+        populateHeader(activity, navigationView);
+    }
+
     private static void populateHeader(AppCompatActivity activity, NavigationView navigationView) {
         if (navigationView.getHeaderCount() == 0) {
             return;
@@ -47,7 +51,7 @@ public final class AppDrawerHelper {
             nameView.setText(AuthHelper.getUserName(activity));
         }
         if (emailView != null) {
-            emailView.setText(R.string.nav_header_subtitle);
+            emailView.setText(AuthHelper.getRankTitle(activity));
         }
     }
 

@@ -23,6 +23,21 @@
         android:textColor="@color/game_accent" />
 
     <TextView
+        android:id="@+id/courseCompleteBadge"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:background="@drawable/module_completed_badge"
+        android:paddingHorizontal="10dp"
+        android:paddingVertical="4dp"
+        android:text="@string/subject_final_passed_badge"
+        android:textAllCaps="true"
+        android:textColor="@color/game_success"
+        android:textSize="11sp"
+        android:textStyle="bold"
+        android:visibility="gone" />
+
+    <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="6dp"

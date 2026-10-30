@@ -15,8 +15,9 @@ if (-not $online) {
     exit 1
 }
 
-Write-Host "Forwarding emulator port 8000 to this PC (adb reverse)..."
+Write-Host "Forwarding emulator ports 8000 and 8025 to this PC (adb reverse)..."
 & $adb reverse tcp:8000 tcp:8000 | Out-Null
+& $adb reverse tcp:8025 tcp:8025 | Out-Null
 if ($LASTEXITCODE -ne 0) {
     Write-Warning "adb reverse failed; the app will still try 10.0.2.2 and 127.0.0.1 automatically."
 }

@@ -18,15 +18,26 @@
     <string name="auth_forgot_subtitle">Enter your account email and we\u2019ll send a link to set a new password</string>
     <string name="auth_forgot_button">Send reset link</string>
     <string name="auth_forgot_success_title">Check your email</string>
-    <string name="auth_forgot_success_body">If an account exists for that address, we sent a reset link. Open it on this device or your computer to choose a new password.</string>
-    <string name="auth_forgot_mailhog_hint">Dev: open MailHog at http://10.0.2.2:8025 (emulator) to read the message.</string>
+    <string name="auth_forgot_success_body">We sent a reset link to that email. Open it in your browser to choose a new password on the Quantum Quizzes CMS.</string>
+    <string name="auth_forgot_open_cms">Open CMS reset page</string>
+    <string name="auth_forgot_cms_path_hint">Email link goes to: %1$s</string>
+    <string name="auth_forgot_mailhog_hint">Dev: MailHog on PC is http://127.0.0.1:8025 — in the emulator browser use http://10.0.2.2:8025 (run install-and-run.cmd for port forward).</string>
     <string name="auth_forgot_error_generic">Could not send the reset link. Try again in a moment.</string>
     <string name="auth_loading_forgot">Sending link\u2026</string>
+    <string name="auth_verify_title">Verify your email</string>
+    <string name="auth_verify_body">We sent a verification link to your email. Open it in your browser, then return here and sign in.</string>
+    <string name="auth_verify_resend">Resend verification email</string>
+    <string name="auth_verify_sent">Verification email sent again.</string>
+    <string name="auth_verify_error">Could not send the verification email. Try again in a moment.</string>
+    <string name="auth_verify_need_credentials">Sign in with your email and password once, then use resend — or register again from this device.</string>
     <string name="auth_back_to_login">Already have an account? Log in</string>
     <string name="auth_error_email_required">Enter your email address</string>
     <string name="auth_error_email_invalid">Enter a valid email address</string>
     <string name="auth_error_password_required">Enter your password</string>
     <string name="auth_error_fields_required">Please fill in all fields</string>
+    <string name="auth_error_name_numbers">Name cannot contain numbers.</string>
+    <string name="auth_error_name_invalid">Name cannot contain numbers or special characters.</string>
+    <string name="auth_error_password_min_length">Password must be at least 8 characters long.</string>
     <string name="auth_error_password_mismatch">Passwords do not match</string>
     <string name="auth_error_year_required">Select your year level</string>
     <string name="auth_error_year_invalid">Choose a year from the list</string>
@@ -37,7 +48,8 @@
         <item>4th year</item>
     </string-array>
     <string name="auth_error_login_failed">Invalid email or password</string>
-    <string name="auth_error_server_unreachable">Cannot reach the API from the emulator. Keep Laravel running on port 8000, then run: adb reverse tcp:8000 tcp:8000 and reopen the app (or use install-and-run.cmd).</string>
+    <string name="auth_error_server_unreachable">Cannot reach the API from the emulator. Start Laravel on port 8000 (php artisan serve --host=0.0.0.0 --port=8000), run install-and-run.cmd (adb reverse), then try again.</string>
+    <string name="auth_error_request_timeout">The server took too long to respond. If you are resetting a password, start MailHog (port 1025) and try again.</string>
     <string name="auth_error_request_failed">Something went wrong (HTTP %1$d). Try again in a moment.</string>
     <string name="auth_error_register_failed">Registration failed. Check your details and try again.</string>
     <string name="auth_loading_login">Signing in…</string>
@@ -51,6 +63,7 @@
     <string name="module_locked_hint">Complete the previous module first</string>
     <string name="module_completed_toast">You already finished this module.</string>
     <string name="module_quiz_title">Module quiz: %1$s</string>
+    <string name="module_quiz_boss_subtitle">Boss quiz — pass to clear this module</string>
     <string name="module_quiz_subtitle">15 questions — need 60% to pass</string>
     <string name="journey_title">Learning Galaxy</string>
     <string name="journey_subtitle">Pick a year to start your programming quest</string>
@@ -81,6 +94,7 @@
     <string name="nav_title_tiers">Title tiers</string>
     <string name="nav_achievements">Achievements</string>
     <string name="nav_header_subtitle">Your quest hub</string>
+    <string name="nav_header_tier_fallback">Novice explorer</string>
     <string name="profile_title">My profile</string>
     <string name="profile_quiz_scores_heading">Quiz scores</string>
     <string name="profile_logout_button">Log out</string>
@@ -211,6 +225,10 @@
     <string name="title_tier_xp_unlocked">Earned at %1$d+ total XP</string>
     <string name="title_tier_detail_levels">Level range: %1$s</string>
     <string name="profile_continue_quest">Continue quest</string>
+    <string name="subject_final_quiz_title">Final subject quiz</string>
+    <string name="subject_final_passed_badge">Subject complete</string>
+    <string name="subject_final_passed_subtitle">Final quiz passed — this subject is cleared</string>
+    <string name="subject_final_passed_toast">You already passed the final quiz for this subject.</string>
     <string name="subject_mission_prefix">Mission: %1$s</string>
     <string name="year_progress_format">%1$d / %2$d modules (%3$d%%)</string>
     <string name="year_unlock_narration">Navigator: New world unlocked — %1$s is now open!</string>

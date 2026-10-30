@@ -118,16 +118,7 @@ public class ModuleActivity extends LogoutAppCompatActivity {
             boolean locked = !completed && !canAccess;
             boolean isCurrent = currentLessonIndex != null && currentLessonIndex == i;
 
-            String subtitle;
-            if (completed) {
-                subtitle = getString(R.string.lesson_status_completed);
-            } else if (isCurrent) {
-                subtitle = getString(R.string.lesson_status_current);
-            } else if (locked) {
-                subtitle = getString(R.string.lesson_status_locked);
-            } else {
-                subtitle = getString(R.string.module_ready);
-            }
+            String subtitle = buildLessonPathSubtitle(lesson, completed, isCurrent, locked);
 
             int index = i;
             moduleContainer.addView(UiHelper.inflatePathCard(
@@ -138,22 +129,42 @@ public class ModuleActivity extends LogoutAppCompatActivity {
                     completed ? "✅" : UiHelper.emojiForIndex(i),
                     locked,
                     completed,
+                    isCurrent,
                     () -> openLesson(lesson, index)
             ));
         }
 
         if (quizReady && !moduleComplete) {
-            moduleContainer.addView(UiHelper.inflatePathCard(
+            moduleContainer.addView(UiHelper.inflatePathBossCard(
                     this,
                     moduleContainer,
                     getString(R.string.module_quiz_title, moduleName),
-                    getString(R.string.module_quiz_subtitle),
-                    "📝",
-                    false,
-                    false,
                     () -> startActivity(ModuleFlowHelper.moduleQuizIntent(this, moduleId, moduleName, subjectId))
             ));
         }
+    }
+
+    private String buildLessonPathSubtitle(JSONObject lesson, boolean completed, boolean isCurrent, boolean locked) {
+        if (locked) {
+            return getString(R.string.lesson_status_locked);
+        }
+        String blurb = lesson.optString("map_blurb", "").trim();
+        if (completed) {
+            if (!blurb.isEmpty()) {
+                return blurb;
+            }
+            return getString(R.string.lesson_status_completed);
+        }
+        if (isCurrent) {
+            if (!blurb.isEmpty()) {
+                return getString(R.string.lesson_status_current) + " · " + blurb;
+            }
+            return getString(R.string.lesson_status_current);
+        }
+        if (!blurb.isEmpty()) {
+            return blurb;
+        }
+        return getString(R.string.module_ready);
     }
 
     private void openLesson(JSONObject lesson, int index) {

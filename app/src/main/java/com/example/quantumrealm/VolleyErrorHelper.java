@@ -4,6 +4,7 @@ import android.content.Context;
 
 import androidx.annotation.StringRes;
 
+import com.android.volley.TimeoutError;
 import com.android.volley.VolleyError;
 
 import org.json.JSONArray;
@@ -21,7 +22,29 @@ public final class VolleyErrorHelper {
         return error == null || error.networkResponse == null;
     }
 
+    public static boolean isEmailVerificationRequired(VolleyError error) {
+        if (error == null || error.networkResponse == null) {
+            return false;
+        }
+        if (error.networkResponse.statusCode != 403) {
+            return false;
+        }
+        byte[] data = error.networkResponse.data;
+        if (data == null || data.length == 0) {
+            return false;
+        }
+        try {
+            JSONObject body = new JSONObject(new String(data));
+            return body.optBoolean("email_verification_required", false);
+        } catch (Exception ignored) {
+            return false;
+        }
+    }
+
     public static String message(Context context, VolleyError error, @StringRes int httpFallbackRes) {
+        if (error instanceof TimeoutError) {
+            return context.getString(R.string.auth_error_request_timeout);
+        }
         if (isConnectionFailure(error)) {
             return context.getString(R.string.auth_error_server_unreachable);
         }

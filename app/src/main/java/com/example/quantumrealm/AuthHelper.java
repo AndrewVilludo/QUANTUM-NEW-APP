@@ -16,6 +16,8 @@ public final class AuthHelper {
     public static final String PREFS_NAME = "APP_PREFS";
     public static final String TOKEN_KEY = "auth_token";
     public static final String USER_NAME_KEY = "user_name";
+    public static final String RANK_TITLE_KEY = "rank_title";
+    private static final String RANK_SYNC_AT_KEY = "rank_title_synced_at";
 
     private AuthHelper() {
     }
@@ -43,7 +45,71 @@ public final class AuthHelper {
     }
 
     public static void clearSession(Context context) {
-        prefs(context).edit().remove(TOKEN_KEY).remove(USER_NAME_KEY).apply();
+        prefs(context).edit()
+                .remove(TOKEN_KEY)
+                .remove(USER_NAME_KEY)
+                .remove(RANK_TITLE_KEY)
+                .remove(RANK_SYNC_AT_KEY)
+                .apply();
+    }
+
+    public static void saveRankTitle(Context context, String title) {
+        String normalized = title != null ? title.trim() : "";
+        prefs(context).edit()
+                .putString(RANK_TITLE_KEY, normalized)
+                .putLong(RANK_SYNC_AT_KEY, System.currentTimeMillis())
+                .apply();
+    }
+
+    public static String getRankTitle(Context context) {
+        String title = prefs(context).getString(RANK_TITLE_KEY, "");
+        if (title != null && !title.isEmpty()) {
+            return title;
+        }
+        return context.getString(R.string.nav_header_tier_fallback);
+    }
+
+    public static boolean shouldSyncRankTitle(Context context, long minIntervalMs) {
+        if (!isLoggedIn(context)) {
+            return false;
+        }
+        long lastSync = prefs(context).getLong(RANK_SYNC_AT_KEY, 0L);
+        return System.currentTimeMillis() - lastSync >= minIntervalMs;
+    }
+
+    /**
+     * Loads rank title from {@code GET /api/student-profile} for the drawer subtitle.
+     */
+    public static void refreshRankTitleFromServer(AppCompatActivity activity, Runnable onComplete) {
+        if (!isLoggedIn(activity)) {
+            if (onComplete != null) {
+                activity.runOnUiThread(onComplete);
+            }
+            return;
+        }
+
+        StudentProfileClient.fetch(activity, new StudentProfileClient.Callback() {
+            @Override
+            public void onSuccess(JSONObject response) {
+                JSONObject dashboard = response.optJSONObject("dashboard");
+                if (dashboard != null) {
+                    JSONObject rank = dashboard.optJSONObject("rank");
+                    if (rank != null) {
+                        saveRankTitle(activity, rank.optString("title", ""));
+                    }
+                }
+                if (onComplete != null) {
+                    activity.runOnUiThread(onComplete);
+                }
+            }
+
+            @Override
+            public void onError(String message) {
+                if (onComplete != null) {
+                    activity.runOnUiThread(onComplete);
+                }
+            }
+        });
     }
 
     /** Revokes token on server (best effort), clears local session, returns to login. */
